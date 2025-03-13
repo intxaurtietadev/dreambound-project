@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 @layer base {
   body {
     @apply bg-black text-gray-200;
@@ -51,6 +52,7 @@
   }
 }
 
+
 /* Custom styles for mystical atmosphere */
 .dream-input {
   background: linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
@@ -97,4 +99,4 @@
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
+} 
