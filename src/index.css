@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-black text-gray-200;
+    font-family: 'EB Garamond', serif;
+  }
+}
+
+@layer components {
+  .nav-button {
+    @apply flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white transition-colors uppercase tracking-widest text-sm;
+  }
+}
+
+/* Starry background */
+.starry-bg {
+  background: radial-gradient(circle at center, #000 0%, #0a0a0a 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.starry-bg::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background-image: 
+    radial-gradient(2px 2px at 40px 60px, #fff 100%, transparent),
+    radial-gradient(2px 2px at 20px 50px, #fff6 100%, transparent),
+    radial-gradient(2px 2px at 30px 100px, #fff3 100%, transparent),
+    radial-gradient(2px 2px at 40px 60px, #fff8 100%, transparent),
+    radial-gradient(2px 2px at 110px 90px, #fff 100%, transparent),
+    radial-gradient(2px 2px at 190px 150px, #fff3 100%, transparent);
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  animation: stars 100s linear infinite;
+  opacity: 0.2;
+}
+
+@keyframes stars {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Custom styles for mystical atmosphere */
+.dream-input {
+  background: linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.dream-input:focus {
+  background: linear-gradient(to bottom, rgba(255,255,255,0.07), rgba(255,255,255,0.04));
+  box-shadow: 0 0 20px rgba(255,255,255,0.05);
+}
+
+.mystical-card {
+  background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.4s ease;
+}
+
+.mystical-card:hover {
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 0 30px rgba(255,255,255,0.03);
+}
+
+.mystical-button {
+  background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.3s ease;
+}
+
+.mystical-button:hover {
+  background: linear-gradient(145deg, rgba(255,255,255,0.15), rgba(255,255,255,0.1));
+  border: 1px solid rgba(255,255,255,0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 20px rgba(255,255,255,0.05);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
