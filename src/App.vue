@@ -1,4 +1,4 @@
-`<template>
+<template>
   <div class="min-h-screen starry-bg">
     <Navigation />
     <main class="container mx-auto px-4 py-12">
@@ -10,7 +10,7 @@
           Explore the depths of your unconscious mind through the ancient art of dream interpretation
         </p>
       </header>
-      <DreamJournal />
+      <router-view></router-view>
     </main>
   </div>
 </template>
@@ -18,5 +18,4 @@
 <script setup lang="ts">
 import { Moon, Sparkles } from 'lucide-vue-next';
 import Navigation from './components/Navigation.vue';
-import DreamJournal from './components/DreamJournal.vue';
-</script>`
+</script>

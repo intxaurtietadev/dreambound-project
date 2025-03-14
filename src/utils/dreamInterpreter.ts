@@ -5,8 +5,8 @@ interface DreamSymbol {
   selfCare: string;
   emotions: string[];
   associations: string[];
-  archetype?: string; // Arquetipo asociado al símbolo
-  psychologicalFunction?: string; // Función psicológica (pensamiento, sentimiento, sensación, intuición)
+  archetype?: string;
+  psychologicalFunction?: string;
 }
 
 interface DreamAnalysis {

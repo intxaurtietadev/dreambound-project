@@ -9,11 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.0.13",
+    "@tailwindcss/vite": "^4.0.14",
     "lucide-react": "^0.479.0",
     "lucide-vue-next": "^0.344.0",
-    "react": "^19.0.0",
-    "vue": "^3.4.21"
+    "vue": "^3.4.21",
+    "vue-router": "^4.5.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.10",
