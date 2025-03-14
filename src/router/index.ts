@@ -1,22 +1,24 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import DreamJournal from '../components/DreamJournal.vue';
-import Profile from '../components/Profile.vue';
+// src/router/index.ts
+import { createRouter, createWebHistory } from 'vue-router';
+import HomeView from '../views/HomeView.vue';
+import JournalView from '../views/JournalView.vue';
+import ProfileView from '../views/ProfileView.vue';
 
-const routes: Array<RouteRecordRaw> = [
+const routes = [
   {
     path: '/',
-    name: 'home',
-    component: () => import('../components/DreamJournal.vue') // O cualquier otro componente de inicio
+    name: 'Home',
+    component: HomeView
   },
   {
     path: '/journal',
-    name: 'journal',
-    component: DreamJournal
+    name: 'Journal',
+    component: JournalView
   },
   {
     path: '/profile',
-    name: 'profile',
-    component: Profile
+    name: 'Profile',
+    component: ProfileView
   }
 ];
 

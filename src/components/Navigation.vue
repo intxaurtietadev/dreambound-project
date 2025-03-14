@@ -37,7 +37,6 @@
   </nav>
 </template>
 
-
 <script setup lang="ts">
 import { Moon, BookHeart, User, HomeIcon } from 'lucide-vue-next';
 </script>

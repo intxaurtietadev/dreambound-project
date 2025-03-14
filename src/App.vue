@@ -10,12 +10,11 @@
           Explore the depths of your unconscious mind through the ancient art of dream interpretation
         </p>
       </header>
-      <router-view></router-view>
+      <router-view />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Moon, Sparkles } from 'lucide-vue-next';
 import Navigation from './components/Navigation.vue';
 </script>
