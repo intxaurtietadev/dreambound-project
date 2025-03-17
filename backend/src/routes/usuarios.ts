@@ -1,26 +1,28 @@
-import { Router } from "express";
-import { Usuario } from "../models/Usuarios";
+// src/usuarios.ts
+import express from "express";
+import { conectarDB } from "../db";
 
-const router = Router();
+const router = express.Router();
 
-// Obtener todos los usuarios
 router.get("/", async (req, res) => {
   try {
-    const usuarios = await Usuario.find();
+    const db = await conectarDB();
+    const usuarios = await db.collection("usuarios").find().toArray();
     res.json(usuarios);
-  } catch (error) {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Error al obtener usuarios" });
   }
 });
 
-// Agregar un nuevo usuario
 router.post("/", async (req, res) => {
   try {
-    const nuevoUsuario = new Usuario(req.body);
-    await nuevoUsuario.save();
-    res.status(201).json(nuevoUsuario);
-  } catch (error) {
-    res.status(500).json({ error: "Error al crear usuario" });
+    const db = await conectarDB();
+    const resultado = await db.collection("usuarios").insertOne(req.body);
+    res.json(resultado);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al agregar usuario" });
   }
 });
 
