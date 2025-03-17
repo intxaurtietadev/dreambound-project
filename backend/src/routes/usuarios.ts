@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import { ObjectId } from "mongodb";
+import bcrypt from "bcrypt";  // Asegúrate de tener bcrypt instalado
 import { conectarDB } from "../db";
 import { IUsuario, Dream } from "../models/Usuarios";
 import { verifyToken, AuthRequest } from "../middleware/verifyToken";
@@ -21,14 +22,26 @@ router.get("/", async (req: Request, res: Response) => {
 // Crear un nuevo usuario
 router.post("/", async (req: Request<{}, {}, Partial<IUsuario>>, res: Response) => {
   try {
-    const { nombre, avatarUrl = "", bio = "" } = req.body;
+    const { nombre, email, password, avatarUrl = "", bio = "" } = req.body;
 
-    if (!nombre) {
-      return res.status(400).json({ error: "El nombre es obligatorio" });
+    if (!nombre || !email || !password) {
+      return res.status(400).json({ error: "El nombre, email y contraseña son obligatorios" });
     }
+
+    // Validar si el email ya está registrado
+    const db = await conectarDB();
+    const existingUser = await db.collection<IUsuario>("usuarios").findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "El email ya está en uso" });
+    }
+
+    // Hashear la contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const nuevoUsuario: IUsuario = {
       nombre,
+      email,
+      password: hashedPassword,  // Almacenar la contraseña hasheada
       avatarUrl,
       bio,
       stats: {
@@ -40,10 +53,10 @@ router.post("/", async (req: Request<{}, {}, Partial<IUsuario>>, res: Response) 
       recentDreams: []
     };
 
-    const db = await conectarDB();
+    // Insertar el nuevo usuario en la base de datos
     const resultado = await db.collection<IUsuario>("usuarios").insertOne(nuevoUsuario);
     res.json({
-      message: "Usuario creado",
+      message: "Usuario creado exitosamente",
       insertedId: resultado.insertedId,
       usuario: nuevoUsuario
     });    

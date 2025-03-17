@@ -8,6 +8,8 @@ export interface Dream {
 
 export interface IUsuario {
   nombre: string;
+  email: string;
+  password: string;
   bio: string;
   avatarUrl: string;
   stats: {

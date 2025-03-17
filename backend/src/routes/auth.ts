@@ -6,22 +6,32 @@ import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
 
 const router = express.Router();
-const SECRET = "tu_clave_super_secreta"; // o usa process.env.JWT_SECRET
+const SECRET = process.env.JWT_SECRET || "tu_clave_super_secreta"; // Usar variable de entorno
 
 // Registro de usuario
 router.post("/register", async (req, res) => {
-  const { nombre, password, bio, avatarUrl, stats, commonThemes, recentDreams } = req.body;
-  if (!nombre || !password) return res.status(400).json({ error: "Faltan campos" });
+  const { nombre, email, password, bio, avatarUrl, stats, commonThemes, recentDreams } = req.body;
+
+  // Validación de campos obligatorios
+  if (!nombre || !email || !password) {
+    return res.status(400).json({ error: "Faltan campos requeridos (nombre, email o contraseña)" });
+  }
 
   try {
     const db = await conectarDB();
-    const existe = await db.collection<IUsuario>("usuarios").findOne({ nombre });
-    if (existe) return res.status(400).json({ error: "Usuario ya existe" });
 
+    // Validar si el email ya está registrado
+    const usuarioExistente = await db.collection<IUsuario>("usuarios").findOne({ email });
+    if (usuarioExistente) {
+      return res.status(400).json({ error: "El email ya está en uso" });
+    }
+
+    // Hashear la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const nuevoUsuario: IUsuario & { password: string } = {
       nombre,
+      email,
       password: hashedPassword,
       bio: bio || "",
       avatarUrl: avatarUrl || "",
@@ -34,11 +44,12 @@ router.post("/register", async (req, res) => {
       recentDreams: recentDreams || [],
     };
 
+    // Insertar el nuevo usuario en la base de datos
     const resultado = await db.collection("usuarios").insertOne(nuevoUsuario);
-    res.status(201).json({ message: "Usuario creado", insertedId: resultado.insertedId });
+    res.status(201).json({ message: "Usuario creado exitosamente", insertedId: resultado.insertedId });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error al registrar" });
+    res.status(500).json({ error: "Error al registrar usuario" });
   }
 });
 
@@ -65,17 +76,19 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Contraseña incorrecta" });
     }
 
+    // Crear el token JWT
     const token = jwt.sign(
       {
         id: usuario._id,
         nombre: usuario.nombre,
+        email: usuario.email, // También puedes incluir el email si es necesario
       },
       SECRET,
       { expiresIn: "2h" }
     );
 
-    // Enviar token + ID
-    res.json({ token, id: usuario._id.toString() });
+    // Enviar token
+    res.json({ token });
   } catch (err) {
     console.error("Error en login:", err);
     res.status(500).json({ error: "Error en el servidor" });
