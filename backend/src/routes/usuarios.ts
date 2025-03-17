@@ -1,13 +1,16 @@
-// src/usuarios.ts
-import express from "express";
+// src/routes/usuarios.ts
+import express, { Request, Response } from "express";
+import { ObjectId } from "mongodb";
 import { conectarDB } from "../db";
+import { IUsuario, Dream } from "../models/Usuarios";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+// Obtener todos los usuarios
+router.get("/", async (req: Request, res: Response) => {
   try {
     const db = await conectarDB();
-    const usuarios = await db.collection("usuarios").find().toArray();
+    const usuarios = await db.collection<IUsuario>("usuarios").find().toArray();
     res.json(usuarios);
   } catch (err) {
     console.error(err);
@@ -15,15 +18,87 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+// Crear un nuevo usuario
+router.post("/", async (req: Request<{}, {}, Partial<IUsuario>>, res: Response) => {
+  try {
+    const { nombre, avatarUrl = "", bio = "" } = req.body;
+
+    if (!nombre) {
+      return res.status(400).json({ error: "El nombre es obligatorio" });
+    }
+
+    const nuevoUsuario: IUsuario = {
+      nombre,
+      avatarUrl,
+      bio,
+      stats: {
+        totalDreams: 0,
+        lucidDreams: 0,
+        currentStreak: 0
+      },
+      commonThemes: [],
+      recentDreams: []
+    };
+
+    const db = await conectarDB();
+    const resultado = await db.collection<IUsuario>("usuarios").insertOne(nuevoUsuario);
+    res.json({
+      message: "Usuario creado",
+      insertedId: resultado.insertedId,
+      usuario: nuevoUsuario
+    });    
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al crear el usuario" });
+  }
+});
+
+// Añadir un nuevo sueño a un usuario
+router.patch("/:id/dreams", async (req: Request<{ id: string }, {}, Dream>, res: Response) => {
   try {
     const db = await conectarDB();
-    const resultado = await db.collection("usuarios").insertOne(req.body);
+    const { id } = req.params;
+    const nuevoSueno = req.body;
+
+    // Validación básica del sueño
+    if (!nuevoSueno.title || !nuevoSueno.description || !nuevoSueno.date || !Array.isArray(nuevoSueno.emotions)) {
+      return res.status(400).json({ error: "Datos del sueño inválidos" });
+    }
+
+    const resultado = await db.collection<IUsuario>("usuarios").updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $push: { recentDreams: nuevoSueno },
+        $inc: { "stats.totalDreams": 1, "stats.currentStreak": 1 }
+      }
+    );
+
     res.json(resultado);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error al agregar usuario" });
+    res.status(500).json({ error: "Error al añadir el sueño" });
   }
 });
+
+
+// Obtener un usuario por ID
+router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const db = await conectarDB();
+    const { id } = req.params;
+
+    const usuario = await db.collection<IUsuario>("usuarios").findOne({ _id: new ObjectId(id) });
+
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json(usuario);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al obtener el usuario" });
+  }
+});
+
 
 export default router;

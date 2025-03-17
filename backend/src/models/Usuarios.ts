@@ -1,8 +1,20 @@
-import mongoose, { Schema } from "mongoose";
+export interface Dream {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  emotions: string[];
+}
 
-const UsuarioSchema = new mongoose.Schema({
-  nombre: { type: String, required: true },
-  edad: { type: Number, required: true },
-});
-
-export const Usuario = mongoose.model("Usuario", UsuarioSchema);
+export interface IUsuario {
+  nombre: string;
+  bio: string;
+  avatarUrl: string;
+  stats: {
+    totalDreams: number;
+    lucidDreams: number;
+    currentStreak: number;
+  };
+  commonThemes: string[];
+  recentDreams: Dream[];
+}
