@@ -221,3 +221,5 @@ export const interpretDream = (dreamText: string): string => {
 
   return result;
 };
+
+export { analyzeDreamNarrative };

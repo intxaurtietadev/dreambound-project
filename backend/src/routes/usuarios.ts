@@ -1,8 +1,8 @@
-// src/routes/usuarios.ts
 import express, { Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import { conectarDB } from "../db";
 import { IUsuario, Dream } from "../models/Usuarios";
+import { verifyToken, AuthRequest } from "../middleware/verifyToken";
 
 const router = express.Router();
 
@@ -53,8 +53,8 @@ router.post("/", async (req: Request<{}, {}, Partial<IUsuario>>, res: Response) 
   }
 });
 
-// Añadir un nuevo sueño a un usuario
-router.patch("/:id/dreams", async (req: Request<{ id: string }, {}, Dream>, res: Response) => {
+// Añadir un nuevo sueño a un usuario (protegido)
+router.patch("/:id/dreams", verifyToken, async (req: AuthRequest<{ id: string }, {}, Dream>, res: Response) => {
   try {
     const db = await conectarDB();
     const { id } = req.params;
@@ -63,6 +63,11 @@ router.patch("/:id/dreams", async (req: Request<{ id: string }, {}, Dream>, res:
     // Validación básica del sueño
     if (!nuevoSueno.title || !nuevoSueno.description || !nuevoSueno.date || !Array.isArray(nuevoSueno.emotions)) {
       return res.status(400).json({ error: "Datos del sueño inválidos" });
+    }
+
+    // Solo el usuario dueño del perfil puede modificarlo
+    if (req.usuarioId !== id) {
+      return res.status(403).json({ error: "No tienes permiso para modificar este perfil" });
     }
 
     const resultado = await db.collection<IUsuario>("usuarios").updateOne(
@@ -79,7 +84,6 @@ router.patch("/:id/dreams", async (req: Request<{ id: string }, {}, Dream>, res:
     res.status(500).json({ error: "Error al añadir el sueño" });
   }
 });
-
 
 // Obtener un usuario por ID
 router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
@@ -99,6 +103,5 @@ router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
     res.status(500).json({ error: "Error al obtener el usuario" });
   }
 });
-
 
 export default router;

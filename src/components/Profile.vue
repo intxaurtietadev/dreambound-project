@@ -1,6 +1,6 @@
 
 <template>
-  <div class="max-w-4xl mx-auto">
+  <div v-if="profile" class="max-w-4xl mx-auto">
     <div class="mystical-card rounded-lg p-8 mb-8">
       <div class="flex items-center gap-8 mb-12">
         <div class="relative w-32 h-32 rounded-full overflow-hidden mystical-card">
@@ -11,7 +11,7 @@
           />
         </div>
         <div>
-          <h2 class="text-2xl text-white mb-2 uppercase tracking-widest">{{ profile.name }}</h2>
+          <h2 class="text-2xl text-white mb-2 uppercase tracking-widest">{{ profile.nombre }}</h2>
           <p class="text-gray-400 tracking-wide">{{ profile.bio }}</p>
         </div>
       </div>
@@ -85,10 +85,13 @@
       </div>
     </div>
   </div>
+  <div v-else class="text-center text-white mt-20">
+    Cargando perfil...
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Moon, Sparkles, BookOpen } from 'lucide-vue-next';
 
 interface Dream {
@@ -100,7 +103,7 @@ interface Dream {
 }
 
 interface Profile {
-  name: string;
+  nombre: string;
   bio: string;
   avatarUrl: string;
   stats: {
@@ -112,46 +115,17 @@ interface Profile {
   recentDreams: Dream[];
 }
 
-// Mock data - replace with actual data from your state management
-const profile = ref<Profile>({
-  name: 'Luna Dreamweaver',
-  bio: 'Exploring the depths of consciousness through dream journaling and spiritual practice',
-  avatarUrl: '',
-  stats: {
-    totalDreams: 42,
-    lucidDreams: 7,
-    currentStreak: 12
-  },
-  commonThemes: [
-    'Flying',
-    'Water',
-    'Ancient Temples',
-    'Celestial Bodies',
-    'Transformation',
-    'Nature'
-  ],
-  recentDreams: [
-    {
-      id: '1',
-      title: 'Flight Through the Aurora',
-      description: 'Soaring through iridescent northern lights, feeling weightless and connected to the cosmos. The colors shifted between deep purples and ethereal greens.',
-      date: '2024-03-15',
-      emotions: ['peaceful', 'awe', 'freedom']
-    },
-    {
-      id: '2',
-      title: 'The Ancient Library',
-      description: 'Wandering through endless shelves of luminous books in a temple-like library. Each book contained memories of past lives.',
-      date: '2024-03-14',
-      emotions: ['curious', 'mystical', 'wisdom']
-    },
-    {
-      id: '3',
-      title: 'Ocean of Stars',
-      description: 'Swimming in an ocean where the water was made of liquid starlight. Each movement created ripples of constellations.',
-      date: '2024-03-13',
-      emotions: ['wonder', 'serenity', 'connection']
-    }
-  ]
+const profile = ref<Profile | null>(null);
+const userId = '67d7e842c2206c945813c39b'; // ← tu ID insertado desde Mongo
+
+onMounted(async () => {
+  try {
+    const response = await fetch(`http://localhost:3000/usuarios/${userId}`);
+    const data = await response.json();
+    profile.value = data;
+  } catch (error) {
+    console.error("Error al cargar el perfil:", error);
+  }
 });
 </script>
+

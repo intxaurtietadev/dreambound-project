@@ -1,64 +1,58 @@
 <template>
-  <div class="max-w-3xl mx-auto">
+  <div class="max-w-md mx-auto">
     <div class="mystical-card rounded-lg p-8">
-      <form @submit.prevent="handleSubmit" class="space-y-8">
-        <!-- Email Field -->
+      <h2 class="text-2xl text-white mb-6 uppercase tracking-widest text-center">Login</h2>
+      <form @submit.prevent="handleSubmit" class="space-y-6">
         <div>
-          <label for="email" class="block text-xl text-white mb-4 uppercase tracking-widest text-sm">
-            Email Address
+          <label for="nombre" class="block text-gray-400 mb-2 uppercase tracking-wider text-sm">
+            Username
           </label>
           <input
-            id="email"
-            v-model="email"
-            type="email"
-            class="dream-input w-full p-4 rounded-lg bg-opacity-10 border border-gray-800 text-white focus:outline-none focus:border-gray-600 transition-all"
-            placeholder="Enter your email..."
+            id="nombre"
+            v-model="nombre"
+            type="text"
+            class="dream-input w-full p-3 rounded-lg bg-opacity-10 border border-gray-800 
+            text-white focus:outline-none focus:border-gray-600 transition-all"
+            required
           />
         </div>
-
-        <!-- Password Field -->
         <div>
-          <label for="password" class="block text-xl text-white mb-4 uppercase tracking-widest text-sm">
+          <label for="password" class="block text-gray-400 mb-2 uppercase tracking-wider text-sm">
             Password
           </label>
           <input
             id="password"
             v-model="password"
             type="password"
-            class="dream-input w-full p-4 rounded-lg bg-opacity-10 border border-gray-800 
+            class="dream-input w-full p-3 rounded-lg bg-opacity-10 border border-gray-800 
             text-white focus:outline-none focus:border-gray-600 transition-all"
-            placeholder="Enter your password..."
+            required
           />
         </div>
-
-        <!-- Error Message -->
-        <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
-
-        <!-- Submit Button -->
         <button
           type="submit"
-          class="mystical-button w-full py-4 px-6 rounded-lg text-white uppercase tracking-widest 
+          class="mystical-button w-full py-3 px-6 rounded-lg text-white uppercase tracking-widest 
           text-sm flex items-center justify-center gap-3"
         >
-          <Sparkles class="w-4 h-4" />
-          Log In
+          <LogIn class="w-4 h-4" />
+          Login
         </button>
 
-        <!-- Sign Up Link -->
-        <p class="text-gray-400 text-center mt-4">
-          Don't have an account?{' '}
-          <a href="#" class="text-white hover:text-gray-300 transition-colors">
-            Sign Up
-          </a>
-        </p>
+        <p v-if="error" class="text-red-500 text-center">{{ error }}</p>
       </form>
+      <div class="mt-6 text-center">
+        <button @click="$emit('switchToRegister')" class="text-gray-400 hover:text-white transition-colors">
+  Don't have an account? Register here
+</button>
+
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Sparkles } from 'lucide-vue-next';
+import { LogIn } from 'lucide-vue-next';
 import { useLoginForm } from '../composables/Login';
 
-const { email, password, error, handleSubmit } = useLoginForm();
+const { nombre, password, error, handleSubmit } = useLoginForm();
 </script>

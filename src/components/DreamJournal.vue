@@ -1,12 +1,9 @@
-`<template>
+<template>
   <div class="max-w-3xl mx-auto">
     <div class="mystical-card rounded-lg p-8">
       <form @submit.prevent="handleSubmit" class="space-y-8">
         <div>
-          <label
-            for="dream"
-            class="block text-xl text-white mb-4 uppercase tracking-widest text-sm"
-          >
+          <label for="dream" class="block text-xl text-white mb-4 uppercase tracking-widest text-sm">
             Record Your Dream
           </label>
           <p class="text-gray-400 mb-6 tracking-wide">
@@ -73,12 +70,45 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Moon, Sparkles, Heart } from 'lucide-vue-next';
-import { interpretDream } from '../utils/dreamInterpreter';
+import { analyzeDreamNarrative } from '../utils/dreamInterpreter';
 
 const dream = ref('');
 const interpretation = ref<string | null>(null);
 
-const handleSubmit = () => {
-  interpretation.value = interpretDream(dream.value);
+// ⚠️ Usa aquí el userId correcto según cómo lo estés gestionando (Pinia, localStorage, etc.)
+const userId = '67d7e842c2206c945813c39b';
+
+const handleSubmit = async () => {
+  const analysis = analyzeDreamNarrative(dream.value);
+  interpretation.value = analysis.interpretation;
+
+  const nuevoSueno = {
+    id: crypto.randomUUID(),
+    title: "Untitled Dream",
+    description: dream.value,
+    date: new Date().toISOString().split('T')[0],
+    emotions: analysis.emotions
+  };
+
+  const token = localStorage.getItem("token");
+
+  try {
+    const response = await fetch(`http://localhost:3000/usuarios/${userId}/dreams`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(nuevoSueno)
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al guardar el sueño");
+    }
+
+    console.log("🌙 Sueño interpretado y guardado correctamente");
+  } catch (error) {
+    console.error("💥 Error al guardar el sueño:", error);
+  }
 };
-</script>`
+</script>
