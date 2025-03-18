@@ -93,6 +93,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { Moon, Sparkles, BookOpen } from 'lucide-vue-next';
+import { useAuthStore } from '../stores/auth'; // ajusta el path si es necesario
+
 
 interface Dream {
   id: string;
@@ -116,16 +118,35 @@ interface Profile {
 }
 
 const profile = ref<Profile | null>(null);
-const userId = '67d7e842c2206c945813c39b'; // ← tu ID insertado desde Mongo
+const authStore = useAuthStore();
+const userId = authStore.userId;
+const token = authStore.token;
+
 
 onMounted(async () => {
   try {
-    const response = await fetch(`http://localhost:3000/usuarios/${userId}`);
+    if (!userId || !token) {
+      throw new Error("No se encontró userId o token en la authStore");
+    }
+
+    const response = await fetch(`http://localhost:3000/api/usuarios/${userId}/dreams`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("Respuesta no OK del servidor");
+    }
+
     const data = await response.json();
     profile.value = data;
   } catch (error) {
     console.error("Error al cargar el perfil:", error);
   }
 });
+
+
 </script>
 

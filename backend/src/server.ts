@@ -2,8 +2,9 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { client, conectarDB } from "./db"; // Importar tanto `client` como `conectarDB`
-import usuariosRoutes from "./routes/usuarios"; // Rutas de usuarios
+import { client, conectarDB } from "./db";
+import usuariosRoutes from "./routes/usuarios";
+import authRoutes from "./routes/auth"; // ✅ Importamos tus rutas de auth
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 
 // Rutas
 app.use("/usuarios", usuariosRoutes);
+app.use("/api/auth", authRoutes); // ✅ Añadimos el endpoint /api/auth/register y /api/auth/login
 
 // Conectar a la base de datos antes de arrancar el servidor
 conectarDB()
@@ -26,7 +28,7 @@ conectarDB()
   })
   .catch((error) => {
     console.error("❌ Error al conectar a la base de datos:", error);
-    process.exit(1); // Terminar el proceso si la conexión falla
+    process.exit(1);
   });
 
 // Manejo global de errores
@@ -35,9 +37,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(500).json({ error: "Algo salió mal" });
 });
 
-// Cerrar la conexión cuando el servidor se detenga
+// Cerrar conexión a la base de datos al cerrar servidor
 process.on("SIGINT", async () => {
   console.log("Cerrando conexión con la base de datos...");
-  await client.close(); // Ahora usamos `client.close()` para cerrar la conexión
-  process.exit(0); // Terminar el proceso con éxito
+  await client.close();
+  process.exit(0);
 });

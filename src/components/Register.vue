@@ -94,9 +94,13 @@
 
       <!-- Enlace al login -->
       <div class="mt-6 text-center">
-        <a @click.prevent="switchToLogin" class="text-gray-400 hover:text-white transition-colors cursor-pointer">
-          Already have an account? Login here
-        </a>
+        <a 
+  href="#"
+  class="register__link"
+  @click.prevent="$emit('switchToLogin')"
+>
+  Already have an account? Login here
+</a>
       </div>
     </div>
   </div>
@@ -117,10 +121,7 @@ const bio = ref<string>('');
 const avatarUrl = ref<string>('');
 const errorMessage = ref<string>('');
 
-// Cambiar a la vista de login
-const switchToLogin = () => {
-  router.push('/login');  // Esto redirige a la ruta de login
-};
+defineEmits(['switchToLogin']);
 
 // Función para registrar usuario
 const handleRegister = async () => {
@@ -153,15 +154,27 @@ const handleRegister = async () => {
       }),
     });
 
+    const contentType = response.headers.get('content-type');
+
     if (response.ok) {
-      router.push('/login');  // Redirigir a login si el registro fue exitoso
+      const data = contentType?.includes('application/json') ? await response.json() : {};
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+      router.push('/profile'); // Redirigir al perfil si el registro fue exitoso
     } else {
-      const data = await response.json();
-      errorMessage.value = data.message || 'Registration failed';
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        errorMessage.value = data.message || data.error || 'Registration failed';
+      } else {
+        const text = await response.text(); // leer como texto si no es JSON
+        console.error('Respuesta no JSON:', text);
+        errorMessage.value = 'Unexpected server response.';
+      }
     }
   } catch (error) {
     console.error('Error during registration:', error);
-    errorMessage.value = 'An unexpected error occurred. Please try again later.';
+    errorMessage.value = 'Something went wrong. Please try again.';
   }
 };
 </script>
