@@ -3,19 +3,16 @@
     <div class="container mx-auto px-4">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-3">
-          <Moon class="text-gray-400" />
-          <span class="text-white uppercase tracking-widest text-sm">Dreambound</span>
-        </div>
-        <div class="flex items-center gap-8">
           <router-link 
             to="/" 
             class="nav-button"
             :class="{ 'text-white': $route.path === '/' }"
           >
-            <HomeIcon class="w-4 h-4" />
-            <span>Home</span>
-          </router-link>
-
+          <Moon class="text-gray-400" />
+          <span class="text-white uppercase tracking-widest text-sm">Dreambound</span>
+        </router-link>
+        </div>
+        <div class="flex items-center gap-8">
           <router-link 
             to="/archetypes" 
             class="nav-button"

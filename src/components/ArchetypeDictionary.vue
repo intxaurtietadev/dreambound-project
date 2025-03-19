@@ -70,7 +70,6 @@
           </div>
         </div>
       </div>
-  
       <div class="flex justify-center">
         <router-link 
           to="/archetype-test" 
