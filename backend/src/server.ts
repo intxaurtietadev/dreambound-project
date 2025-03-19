@@ -1,24 +1,32 @@
-// src/server.ts
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { client, conectarDB } from "./db";
 import usuariosRoutes from "./routes/usuarios";
-import authRoutes from "./routes/auth"; // ✅ Importamos tus rutas de auth
+import authRoutes from "./routes/auth";
 
 dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// 💡 Manejo de preflight (OPTIONS) para que CORS funcione correctamente con Vite
+app.options("*", cors()); // <-- ESTE ES EL CLAVE
+
+// ✅ Middleware de CORS configurado
+app.use(cors({
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+// Middleware para parsear JSON
 app.use(express.json());
 
 // Rutas
 app.use("/usuarios", usuariosRoutes);
-app.use("/api/auth", authRoutes); // ✅ Añadimos el endpoint /api/auth/register y /api/auth/login
+app.use("/api/auth", authRoutes);
 
-// Conectar a la base de datos antes de arrancar el servidor
+// Conexión y arranque del servidor
 conectarDB()
   .then(() => {
     const PORT = process.env.PORT || 3000;
@@ -31,13 +39,13 @@ conectarDB()
     process.exit(1);
   });
 
-// Manejo global de errores
+// Middleware global de manejo de errores
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ error: "Algo salió mal" });
 });
 
-// Cerrar conexión a la base de datos al cerrar servidor
+// Cierre limpio de conexión con la BD
 process.on("SIGINT", async () => {
   console.log("Cerrando conexión con la base de datos...");
   await client.close();

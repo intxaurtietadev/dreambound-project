@@ -110,8 +110,10 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { UserPlus } from 'lucide-vue-next';
+import { useAuthStore } from '../stores/auth'; // ✅ Importa tu authStore si usas Pinia
 
 const router = useRouter();
+const authStore = useAuthStore(); // ✅ Instancia el store
 
 // Tipos de datos
 const nombre = ref<string>('');
@@ -158,10 +160,16 @@ const handleRegister = async () => {
 
     if (response.ok) {
       const data = contentType?.includes('application/json') ? await response.json() : {};
-      if (data.token) {
+      console.log("Respuesta del servidor al registrar:", data); // 👈
+
+      if (data.token && data.userId) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('userId', data.userId);
+        authStore.login(data.token, data.userId); // ✅ Notifica al store
+        router.push('/profile'); // ✅ Redirige al perfil
+      } else {
+        errorMessage.value = 'Invalid server response. Missing token or userId.';
       }
-      router.push('/profile'); // Redirigir al perfil si el registro fue exitoso
     } else {
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();

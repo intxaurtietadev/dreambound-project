@@ -54,11 +54,21 @@ import { ref } from 'vue';
 import { LogIn } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { jwtDecode } from 'jwt-decode';
 
-// Definir el tipo de la respuesta
+
+// Interfaz para el contenido decodificado del token
+interface DecodedToken {
+  id: string;
+  nombre: string;
+  email: string;
+  iat: number;
+  exp: number;
+}
+
+// Interfaz de la respuesta del backend
 interface LoginResponse {
   token: string;
-  userId: string;
 }
 
 const nombre = ref<string>('');
@@ -66,7 +76,7 @@ const password = ref<string>('');
 const error = ref<string | null>(null);
 
 const router = useRouter();
-const authStore = useAuthStore(); // Obtener el store de auth
+const authStore = useAuthStore();
 
 const handleSubmit = async () => {
   try {
@@ -78,21 +88,27 @@ const handleSubmit = async () => {
       body: JSON.stringify({ nombre: nombre.value, password: password.value }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Login failed');
-    }
-
-    // Obtener los datos de la respuesta, especificando el tipo
     const data: LoginResponse = await response.json();
 
-    // Usar Pinia para almacenar el token y userId
-    authStore.login(data.token, data.userId);
+    if (!response.ok) {
+      throw new Error('Login failed');
+    }
 
-    // Redirigir a la página de perfil
+    // Decodificar el token para obtener el userId
+    const decoded = jwtDecode<DecodedToken>(data.token);
+    const userId = decoded.id;
+
+    // Guardar en el store
+    authStore.login(data.token, userId);
+    console.log('✅ Login successful');
+    console.log('🧠 Token:', authStore.token);
+    console.log('🧠 UserId:', authStore.userId);
+
+    // Redirigir al perfil
     router.push('/profile');
   } catch (err) {
     error.value = (err as Error).message || 'Unexpected error';
+    console.error('❌ Login error:', err);
   }
 };
 </script>

@@ -31,9 +31,9 @@
             to="/profile" 
             class="nav-button"
             :class="{ 'text-white': $route.path === '/profile' }"
-          >
-            <User class="w-4 h-4" />
-            <span>Profile</span>
+            >
+          <User class="w-4 h-4" />
+          <span>Profile</span>
           </router-link>
 
           <router-link 
@@ -45,6 +45,7 @@
             <LogIn class="w-4 h-4" />
             <span>Login</span>
           </router-link>
+
         </div>
       </div>
     </div>

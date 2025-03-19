@@ -46,7 +46,24 @@ router.post("/register", async (req, res) => {
 
     // Insertar el nuevo usuario en la base de datos
     const resultado = await db.collection("usuarios").insertOne(nuevoUsuario);
-    res.status(201).json({ message: "Usuario creado exitosamente", insertedId: resultado.insertedId });
+
+    // Crear token JWT tras registrar
+    const token = jwt.sign(
+      {
+        id: resultado.insertedId,
+        nombre,
+        email,
+      },
+      SECRET,
+      { expiresIn: "2h" }
+    );
+
+    res.status(201).json({
+      message: "Usuario creado exitosamente",
+      token,
+      userId: resultado.insertedId, // 👈 aquí devuelves el ID al frontend
+    });
+    
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error al registrar usuario" });
@@ -81,7 +98,7 @@ router.post("/login", async (req, res) => {
       {
         id: usuario._id,
         nombre: usuario.nombre,
-        email: usuario.email, // También puedes incluir el email si es necesario
+        email: usuario.email,
       },
       SECRET,
       { expiresIn: "2h" }
