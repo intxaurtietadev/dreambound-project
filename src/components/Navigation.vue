@@ -17,6 +17,14 @@
           </router-link>
 
           <router-link 
+            to="/archetypes" 
+            class="nav-button"
+            :class="{ 'text-white': $route.path === '/archetypes' }"
+          >
+            <BookOpen class="w-4 h-4" />
+            <span>Archetypes</span>
+          </router-link>
+          <router-link 
             to="/journal" 
             class="nav-button"
             :class="{ 'text-white': $route.path === '/journal' }"
@@ -31,9 +39,9 @@
             to="/profile" 
             class="nav-button"
             :class="{ 'text-white': $route.path === '/profile' }"
-            >
-          <User class="w-4 h-4" />
-          <span>Profile</span>
+          >
+            <User class="w-4 h-4" />
+            <span>Profile</span>
           </router-link>
 
           <router-link 
@@ -53,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { Moon, BookHeart, User, HomeIcon, LogIn } from 'lucide-vue-next';
+import { Moon, BookHeart, User, HomeIcon, LogIn, BookOpen } from 'lucide-vue-next';
 import { ref, onMounted } from 'vue';
 
 const isLoggedIn = ref(false);

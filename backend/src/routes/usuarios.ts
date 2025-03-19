@@ -66,6 +66,7 @@ router.post("/", async (req: Request<{}, {}, Partial<IUsuario>>, res: Response) 
   }
 });
 
+
 // Añadir un nuevo sueño a un usuario (protegido)
 router.patch("/:id/dreams", verifyToken, async (req: AuthRequest<{ id: string }, {}, Dream>, res: Response) => {
   try {

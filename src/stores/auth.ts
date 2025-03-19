@@ -2,21 +2,21 @@ import { defineStore } from 'pinia';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    token: '',
-    userId: '',
+    token: localStorage.getItem('token') || null,
+    userId: localStorage.getItem('userId') || null,
   }),
-  getters: {
-    isAuthenticated: (state) => !!state.token,
-  },
   actions: {
     login(token: string, userId: string) {
       this.token = token;
       this.userId = userId;
+      localStorage.setItem('token', token);
+      localStorage.setItem('userId', userId);
     },
     logout() {
-      this.token = '';
-      this.userId = '';
+      this.token = null;
+      this.userId = null;
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
     },
   },
-  persist: true, // 👈 Activas persistencia automática aquí
 });

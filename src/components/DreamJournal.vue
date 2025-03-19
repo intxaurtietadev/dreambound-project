@@ -71,12 +71,13 @@
 import { ref } from 'vue';
 import { Moon, Sparkles, Heart } from 'lucide-vue-next';
 import { analyzeDreamNarrative } from '../utils/dreamInterpreter';
+import { useAuthStore } from '../stores/auth'; // Importa el store de autenticación
 
 const dream = ref('');
 const interpretation = ref<string | null>(null);
 
-// ⚠️ Usa aquí el userId correcto según cómo lo estés gestionando (Pinia, localStorage, etc.)
-const userId = '67d7e842c2206c945813c39b';
+const authStore = useAuthStore(); // Obtén el store de autenticación
+const userId = authStore.userId; // Obtén el userId del store
 
 const handleSubmit = async () => {
   const analysis = analyzeDreamNarrative(dream.value);

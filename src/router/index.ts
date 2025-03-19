@@ -3,6 +3,8 @@ import HomeView from '../views/HomeView.vue';
 import JournalView from '../views/JournalView.vue';
 import ProfileView from '../views/ProfileView.vue';
 import LoginView from '../views/LoginView.vue';
+import ArchetypesView from '../views/ArchetypesView.vue';
+import ArchetypeTestView from '../views/ArchetypeTestView.vue';
 
 const routes = [
   {
@@ -29,6 +31,16 @@ const routes = [
   {
     path: '/:pathMatch(.*)*',
     redirect: '/'
+  },
+  {
+    path: '/archetypes',
+    name: 'Archetypes',
+    component: ArchetypesView
+  },
+  {
+    path: '/archetype-test',
+    name: 'ArchetypeTest',
+    component: ArchetypeTestView
   }
 ];
 

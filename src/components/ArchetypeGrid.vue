@@ -13,37 +13,43 @@
   
   <script setup lang="ts">
   import ArchetypeCard from './ArchetypeCard.vue'
+  import sageImage from '../assets/archetypes/sage.jpg'
+  import warriorImage from '../assets/archetypes/warrior.jpg'
+  import shadowImage from '../assets/archetypes/shadow.jpg'
+  import loverImage from '../assets/archetypes/lover.jpg'
+  import childImage from '../assets/archetypes/child.jpg'
+  import magicianImage from '../assets/archetypes/magician.jpg'
   
   const archetypes = [
     {
       title: 'The Sage',
       description: 'Embodies knowledge, introspection, and the pursuit of truth.',
-      image: '/assets/archetypes/sage.jpg'
+      image: sageImage
     },
     {
       title: 'The Warrior',
       description: 'Symbol of courage, strength, and the will to fight for purpose.',
-      image: '/assets/archetypes/warrior.jpg'
+      image: warriorImage
     },
     {
       title: 'The Shadow',
       description: 'The unconscious, repressed self that holds hidden truths.',
-      image: '/assets/archetypes/shadow.jpg'
+      image: shadowImage
     },
     {
       title: 'The Lover',
       description: 'Connection, passion, and the desire for unity.',
-      image: '/assets/archetypes/lover.jpg'
+      image: loverImage
     },
     {
       title: 'The Child',
       description: 'Represents innocence, creativity, and potential.',
-      image: '/assets/archetypes/child.jpg'
+      image: childImage
     },
     {
       title: 'The Magician',
       description: 'Transformation, inner power, and access to the mystical.',
-      image: '/assets/archetypes/magician.jpg'
+      image: magicianImage
     }
   ]
   </script>
