@@ -4,7 +4,7 @@
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center gap-3">
           <Moon class="text-gray-400" />
-          <span class="text-white uppercase tracking-widest text-sm">Dreamscape</span>
+          <span class="text-white uppercase tracking-widest text-sm">Dreambound</span>
         </div>
         <div class="flex items-center gap-8">
           <router-link 

@@ -38,7 +38,11 @@ conectarDB()
     console.error("❌ Error al conectar a la base de datos:", error);
     process.exit(1);
   });
-
+  
+  app.get("/", (req, res) => {
+    res.send("¡Servidor funcionando!");
+  });
+  
 // Middleware global de manejo de errores
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
