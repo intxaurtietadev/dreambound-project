@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { ObjectId } from "mongodb";
-import bcrypt from "bcrypt";  // Asegúrate de tener bcrypt instalado
+import bcrypt from "bcrypt";
 import { conectarDB } from "../db";
 import { IUsuario, Dream } from "../models/Usuarios";
 import { verifyToken, AuthRequest } from "../middleware/verifyToken";
@@ -14,7 +14,7 @@ router.get("/", async (req: Request, res: Response) => {
     const usuarios = await db.collection<IUsuario>("usuarios").find().toArray();
     res.json(usuarios);
   } catch (err) {
-    console.error(err);
+    console.error("Error al obtener usuarios:", err);
     res.status(500).json({ error: "Error al obtener usuarios" });
   }
 });
@@ -45,56 +45,22 @@ router.post("/", async (req: Request<{}, {}, Partial<IUsuario>>, res: Response) 
       stats: {
         totalDreams: 0,
         lucidDreams: 0,
-        currentStreak: 0
+        currentStreak: 0,
       },
       commonThemes: [],
-      recentDreams: []
+      recentDreams: [],
     };
 
     const resultado = await db.collection<IUsuario>("usuarios").insertOne(nuevoUsuario);
+
     res.json({
       message: "Usuario creado exitosamente",
       insertedId: resultado.insertedId,
-      usuario: nuevoUsuario
-    });    
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error al crear el usuario" });
-  }
-});
-
-// Añadir un nuevo sueño a un usuario (protegido)
-router.patch("/:id/dreams", verifyToken, async (req: AuthRequest<{ id: string }, {}, Dream>, res: Response) => {
-  try {
-    const db = await conectarDB();
-    const { id } = req.params;
-    const nuevoSueno = req.body;
-
-    if (!nuevoSueno.title || !nuevoSueno.description || !nuevoSueno.date || !Array.isArray(nuevoSueno.emotions)) {
-      return res.status(400).json({ error: "Datos del sueño inválidos" });
-    }
-
-    if (req.usuarioId !== id) {
-      return res.status(403).json({ error: "No tienes permiso para modificar este perfil" });
-    }
-
-    await db.collection<IUsuario>("usuarios").updateOne(
-      { _id: new ObjectId(id) },
-      {
-        $push: { recentDreams: nuevoSueno },
-        $inc: { "stats.totalDreams": 1, "stats.currentStreak": 1 }
-      }
-    );
-
-    const usuarioActualizado = await db.collection<IUsuario>("usuarios").findOne({ _id: new ObjectId(id) });
-
-    res.json({
-      message: "Sueño añadido correctamente",
-      recentDreams: usuarioActualizado?.recentDreams || []
+      usuario: nuevoUsuario,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error al añadir el sueño" });
+    console.error("Error al crear usuario:", err);
+    res.status(500).json({ error: "Error al crear el usuario" });
   }
 });
 
@@ -112,8 +78,47 @@ router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
 
     res.json(usuario);
   } catch (err) {
-    console.error(err);
+    console.error("Error al obtener el usuario:", err);
     res.status(500).json({ error: "Error al obtener el usuario" });
+  }
+});
+
+// Añadir un sueño a un usuario (ruta protegida)
+router.patch("/:id/dreams", verifyToken, async (req: AuthRequest<{ id: string }, {}, Dream>, res: Response) => {
+  try {
+    const db = await conectarDB();
+    const { id } = req.params;
+    const nuevoSueno = req.body;
+
+    if (!nuevoSueno.title || !nuevoSueno.description || !nuevoSueno.date || !Array.isArray(nuevoSueno.emotions)) {
+      return res.status(400).json({ error: "Datos del sueño inválidos" });
+    }
+
+    if (req.usuarioId !== id) {
+      return res.status(403).json({ error: "No tienes permiso para modificar este perfil" });
+    }
+
+    const resultado = await db.collection<IUsuario>("usuarios").updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $push: { recentDreams: nuevoSueno },
+        $inc: { "stats.totalDreams": 1, "stats.currentStreak": 1 },
+      }
+    );
+
+    if (resultado.modifiedCount === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado o sin cambios" });
+    }
+
+    const usuarioActualizado = await db.collection<IUsuario>("usuarios").findOne({ _id: new ObjectId(id) });
+
+    res.json({
+      message: "Sueño añadido correctamente",
+      recentDreams: usuarioActualizado?.recentDreams || [],
+    });
+  } catch (err) {
+    console.error("Error al añadir el sueño:", err);
+    res.status(500).json({ error: "Error al añadir el sueño" });
   }
 });
 
