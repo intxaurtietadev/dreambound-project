@@ -28,20 +28,18 @@ router.post("/", async (req: Request<{}, {}, Partial<IUsuario>>, res: Response) 
       return res.status(400).json({ error: "El nombre, email y contraseña son obligatorios" });
     }
 
-    // Validar si el email ya está registrado
     const db = await conectarDB();
     const existingUser = await db.collection<IUsuario>("usuarios").findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: "El email ya está en uso" });
     }
 
-    // Hashear la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const nuevoUsuario: IUsuario = {
       nombre,
       email,
-      password: hashedPassword,  // Almacenar la contraseña hasheada
+      password: hashedPassword,
       avatarUrl,
       bio,
       stats: {
@@ -53,7 +51,6 @@ router.post("/", async (req: Request<{}, {}, Partial<IUsuario>>, res: Response) 
       recentDreams: []
     };
 
-    // Insertar el nuevo usuario en la base de datos
     const resultado = await db.collection<IUsuario>("usuarios").insertOne(nuevoUsuario);
     res.json({
       message: "Usuario creado exitosamente",
@@ -66,7 +63,6 @@ router.post("/", async (req: Request<{}, {}, Partial<IUsuario>>, res: Response) 
   }
 });
 
-
 // Añadir un nuevo sueño a un usuario (protegido)
 router.patch("/:id/dreams", verifyToken, async (req: AuthRequest<{ id: string }, {}, Dream>, res: Response) => {
   try {
@@ -74,17 +70,15 @@ router.patch("/:id/dreams", verifyToken, async (req: AuthRequest<{ id: string },
     const { id } = req.params;
     const nuevoSueno = req.body;
 
-    // Validación básica del sueño
     if (!nuevoSueno.title || !nuevoSueno.description || !nuevoSueno.date || !Array.isArray(nuevoSueno.emotions)) {
       return res.status(400).json({ error: "Datos del sueño inválidos" });
     }
 
-    // Solo el usuario dueño del perfil puede modificarlo
     if (req.usuarioId !== id) {
       return res.status(403).json({ error: "No tienes permiso para modificar este perfil" });
     }
 
-    const resultado = await db.collection<IUsuario>("usuarios").updateOne(
+    await db.collection<IUsuario>("usuarios").updateOne(
       { _id: new ObjectId(id) },
       {
         $push: { recentDreams: nuevoSueno },
@@ -92,7 +86,12 @@ router.patch("/:id/dreams", verifyToken, async (req: AuthRequest<{ id: string },
       }
     );
 
-    res.json(resultado);
+    const usuarioActualizado = await db.collection<IUsuario>("usuarios").findOne({ _id: new ObjectId(id) });
+
+    res.json({
+      message: "Sueño añadido correctamente",
+      recentDreams: usuarioActualizado?.recentDreams || []
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al añadir el sueño" });

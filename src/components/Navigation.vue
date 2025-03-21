@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { Moon, BookHeart, User, HomeIcon, LogIn, BookOpen, Star } from 'lucide-vue-next';
+import { Moon, BookHeart, User, LogIn, BookOpen, Star } from 'lucide-vue-next';
 import { ref, onMounted } from 'vue';
 
 const isLoggedIn = ref(false);

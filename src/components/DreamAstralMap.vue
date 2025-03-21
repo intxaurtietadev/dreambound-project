@@ -238,8 +238,8 @@
   
   .constellation-line {
     stroke: var(--line-color);
-    stroke-width: 0.3; /* más fino que 1 */
-    opacity: 0.3;
+    stroke-width: 0.1; /* más fino que 1 */
+    opacity: 0.2;
   }
   
   @keyframes pulse {
