@@ -9,10 +9,11 @@
             :class="{ 'text-white': $route.path === '/' }"
           >
           <Moon class="text-gray-400" />
-          <span class="text-white uppercase tracking-widest text-sm">Dreambound</span>
+          <span class="text-white uppercase tracking-widest text-sm">Dreamscape</span>
         </router-link>
         </div>
         <div class="flex items-center gap-8">
+
           <router-link 
             to="/archetypes" 
             class="nav-button"
@@ -21,6 +22,7 @@
             <BookOpen class="w-4 h-4" />
             <span>Archetypes</span>
           </router-link>
+
           <router-link 
             to="/journal" 
             class="nav-button"
@@ -28,6 +30,15 @@
           >
             <BookHeart class="w-4 h-4" />
             <span>Journal</span>
+          </router-link>
+
+          <router-link 
+            to="/astral-map" 
+            class="nav-button"
+            :class="{ 'text-white': $route.path === '/astral-map' }"
+          >
+            <Star class="w-4 h-4" />
+            <span>Astral Map</span>
           </router-link>
 
           <!-- Dinámico: Login o Profile -->
@@ -50,7 +61,6 @@
             <LogIn class="w-4 h-4" />
             <span>Login</span>
           </router-link>
-
         </div>
       </div>
     </div>
@@ -58,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { Moon, BookHeart, User, HomeIcon, LogIn, BookOpen } from 'lucide-vue-next';
+import { Moon, BookHeart, User, HomeIcon, LogIn, BookOpen, Star } from 'lucide-vue-next';
 import { ref, onMounted } from 'vue';
 
 const isLoggedIn = ref(false);

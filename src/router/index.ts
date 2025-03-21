@@ -5,6 +5,7 @@ import ProfileView from '../views/ProfileView.vue';
 import LoginView from '../views/LoginView.vue';
 import ArchetypesView from '../views/ArchetypesView.vue';
 import ArchetypeTestView from '../views/ArchetypeTestView.vue';
+import DreamAstralMapView from '../views/DreamAstralMapView.vue';
 
 const routes = [
   {
@@ -13,24 +14,20 @@ const routes = [
     component: HomeView
   },
   {
-    path: '/journal',
-    name: 'Journal',
-    component: JournalView
-  },
-  {
-    path: '/profile',
-    name: 'Profile',
-    component: ProfileView,
-    meta: { requiresAuth: true } // Ruta protegida que requiere autenticación
-  },
-  {
     path: '/login',
     name: 'Login',
     component: LoginView
   },
   {
-    path: '/:pathMatch(.*)*',
-    redirect: '/'
+    path: '/profile',
+    name: 'Profile',
+    component: ProfileView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/journal',
+    name: 'Journal',
+    component: JournalView
   },
   {
     path: '/archetypes',
@@ -41,6 +38,16 @@ const routes = [
     path: '/archetype-test',
     name: 'ArchetypeTest',
     component: ArchetypeTestView
+  },
+  {
+    path: '/astral-map',
+    name: 'DreamAstralMap',
+    component: DreamAstralMapView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
   }
 ];
 
@@ -49,15 +56,15 @@ const router = createRouter({
   routes
 });
 
-// Guard de navegación global para verificar la autenticación
+// Guard global para proteger rutas
 router.beforeEach((to, from, next) => {
-  const isLoggedIn = !!localStorage.getItem('token'); // Verifica si el token existe en localStorage
+  const token = localStorage.getItem('token');
+  const isLoggedIn = !!token;
 
-  // Si la ruta requiere autenticación y el usuario no está logueado, lo redirige a Login
   if (to.meta.requiresAuth && !isLoggedIn) {
     next({ name: 'Login' });
   } else {
-    next(); // Si está logueado o no es necesario autenticación, continua con la navegación
+    next();
   }
 });
 
