@@ -1,0 +1,27 @@
+
+# Archivos de entorno virtual
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Archivos de configuración locales
+.env
+*.env
+
+# Archivos de base de datos
+*.db
+
+# Archivos generados por el IDE
+.vscode/
+.idea/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Pinecone (si es necesario ocultar archivos específicos relacionados con la conexión)
+pinecone_data/
+
+# Archivos de logs
+*.log
