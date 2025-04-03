@@ -43,6 +43,7 @@ jungian_concepts = [
     "Water: Represents the unconscious, emotions, and transformation.",
     "The Forest: Place of the unknown, mystery, and encounter with the unconscious.",
     "The Mountain: Symbol of spiritual achievement, enlightenment, and connection with the Self.",
+    "The Spiral: Represents evolution, cycles of change, and spiritual growth.",
     "The Labyrinth: Represents the search for knowledge and internal confusion.",
     "The Serpent: Symbolizes transformation, rebirth, and vital energy.",
     "The Sun and the Moon: The sun represents consciousness, reason, and masculinity; the moon symbolizes the unconscious, intuition, and femininity.",
@@ -67,7 +68,15 @@ jungian_concepts = [
     "The Mask: Highlights different facets of the self, the hidden and the revealed.",
     "The Wounded Healer: Represents the ability to heal others through personal suffering.",
     "The Sacrificial Victim: Symbolizes the need to let go for transformation and renewal.",
-    "The Spiral: Represents evolution, cycles of change, and spiritual growth."
+    "The Spiral: Represents evolution, cycles of change, and spiritual growth.",
+    "The Cosmic Egg: A symbol of potential, creation, and the birth of new consciousness.",
+    "The Philosopher's Stone: Symbol of transformation, enlightenment, and ultimate wisdom.",
+    "The Black Sun (Sol Niger): Represents deep psychological transformation and the dissolution of the ego.",
+    "The Ouroboros: The snake eating its own tail, symbolizing eternity, cycles, and self-renewal.",
+    "The Alchemical Process: The psychological stages of transformation (Nigredo, Albedo, Rubedo).",
+    "The Trickster God: A more divine form of the trickster, associated with chaos, change, and rebirth.",
+    "The World Tree: Symbolizing the axis mundi, connecting the underworld, middle world, and heavens.",
+    "The Cosmic Ocean: Represents the vast unconscious, primal forces, and spiritual awakening."
 ]
 
 # Convert concepts into embeddings and upload them to Pinecone

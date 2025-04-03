@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { client, conectarDB } from "./db";
 import usuariosRoutes from "./routes/usuarios";
 import authRoutes from "./routes/auth";
+import jungianRoutes from "./routes/jungian";  // Importa las rutas de conceptos jungianos
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use(express.json());
 // Rutas
 app.use("/usuarios", usuariosRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/jungian", jungianRoutes);  // Agrega las rutas de conceptos jungianos
 
 // Conexión y arranque del servidor
 conectarDB()
@@ -38,11 +40,11 @@ conectarDB()
     console.error("❌ Error al conectar a la base de datos:", error);
     process.exit(1);
   });
-  
-  app.get("/", (req, res) => {
-    res.send("¡Servidor funcionando!");
-  });
-  
+
+app.get("/", (req, res) => {
+  res.send("¡Servidor funcionando!");
+});
+
 // Middleware global de manejo de errores
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
