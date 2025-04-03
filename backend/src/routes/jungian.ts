@@ -1,40 +1,45 @@
-import { Router } from "express";
-import axios from "axios";
+import { Router } from 'express';
+import axios from 'axios';
+import { getJungianArchetypes } from '../services/pineconeService';
 
 const router = Router();
+const PYTHON_AI_SERVICE = process.env.PYTHON_AI_SERVICE || 'http://localhost:5001';
 
-// Ruta para indexar conceptos jungianos
-router.post("/index-concepts", async (req, res) => {
+// Ruta para interpretar el sueño
+router.post('/interpret-dream', async (req, res) => {
   try {
-    const jungianConcepts = [
-      { id: "archetype_1", text: "The Hero archetype represents the journey of self-discovery." },
-      { id: "archetype_2", text: "The Shadow represents the unconscious part of the psyche." },
-      { id: "archetype_3", text: "The Anima/Animus represents the inner feminine/masculine." },
-      { id: "archetype_4", text: "The Self represents the totality of the psyche." },
-    ];
-
-    // Enviar los conceptos jungianos al servicio Python para indexarlos
-    const response = await axios.post('http://localhost:5001/index-concepts', { concepts: jungianConcepts });
-    
-    res.status(200).json({ message: "Concepts indexed successfully!" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error indexing concepts" });
-  }
-});
-
-// Ruta para obtener conceptos relevantes basados en un sueño
-router.post("/retrieve-concepts", async (req, res) => {
-  try {
+    console.log("Solicitud recibida en /interpret-dream");
     const { dreamText } = req.body;
+    
+    if (!dreamText) {
+      console.log("dreamText no proporcionado");
+      return res.status(400).json({ error: "dreamText is required" });
+    }
 
-    // Enviar el texto del sueño al servicio Python para obtener conceptos relevantes
-    const response = await axios.post('http://localhost:5001/retrieve-concepts', { dreamText });
+    console.log("Obteniendo arquetipos Jungianos...");
+    const archetypes = await getJungianArchetypes(dreamText);
+    console.log("Arquetipos obtenidos:", archetypes);
 
-    res.status(200).json({ relevantConcepts: response.data.relevantConcepts });
+    if (archetypes.length === 0) {
+      console.log("No se encontraron arquetipos");
+      return res.status(404).json({ error: "No se encontraron arquetipos" });
+    }
+
+    console.log("Enviando solicitud al servicio Python...");
+    const response = await axios.post(`${PYTHON_AI_SERVICE}/interpret-dream`, {
+      dream_text: dreamText,
+      relevant_archetypes: archetypes // Enviamos los arquetipos encontrados
+    });
+    console.log("Respuesta del servicio Python:", response.data);
+
+    res.json({
+      interpretation: response.data.interpretation,
+      archetypes: archetypes,
+      status: "success"
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error retrieving concepts" });
+    console.error("Error en interpretación:", error);
+    res.status(500).json({ error: "Error al interpretar el sueño" });
   }
 });
 

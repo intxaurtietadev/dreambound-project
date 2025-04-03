@@ -1,8 +1,8 @@
-// src/middleware/verifyToken.ts
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { ObjectId } from 'mongodb';
 
-const SECRET = "tu_clave_super_secreta"; // debería venir de process.env en producción
+const SECRET = process.env.JWT_SECRET_KEY || "tu_clave_super_secreta";
 
 export interface AuthRequest<P = {}, ResBody = any, ReqBody = any, ReqQuery = any> 
   extends Request<P, ResBody, ReqBody, ReqQuery> {
@@ -12,9 +12,11 @@ export interface AuthRequest<P = {}, ResBody = any, ReqBody = any, ReqQuery = an
 export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader) return res.status(401).json({ error: "Token no proporcionado" });
+  if (!authHeader) {
+    return res.status(401).json({ error: "Token no proporcionado" });
+  }
 
-  const token = authHeader.split(" ")[1]; // Espera "Bearer TOKEN"
+  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(token, SECRET) as { id: string };

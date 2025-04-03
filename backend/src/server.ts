@@ -1,34 +1,41 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import { client, conectarDB } from "./db";
-import usuariosRoutes from "./routes/usuarios";
-import authRoutes from "./routes/auth";
-import jungianRoutes from "./routes/jungian";  // Importa las rutas de conceptos jungianos
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { client, conectarDB } from './db';
+import usuariosRoutes from './routes/usuarios';
+import authRoutes from './routes/auth';
+import jungianRoutes from './routes/jungian';
 
 dotenv.config();
 
 const app = express();
 
-// 💡 Manejo de preflight (OPTIONS) para que CORS funcione correctamente con Vite
-app.options("*", cors()); // <-- ESTE ES EL CLAVE
-
-// ✅ Middleware de CORS configurado
+// Configuración de middleware
 app.use(cors({
   origin: "http://localhost:5173",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Middleware para parsear JSON
 app.use(express.json());
 
 // Rutas
 app.use("/usuarios", usuariosRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/jungian", jungianRoutes);  // Agrega las rutas de conceptos jungianos
+app.use("/api/jungian", jungianRoutes);
 
-// Conexión y arranque del servidor
+// Ruta principal
+app.get("/", (_req, res) => {
+  res.send("¡Servidor funcionando!");
+});
+
+// Middleware de errores
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Algo salió mal" });
+});
+
+// Conexión a la base de datos y arranque del servidor
 conectarDB()
   .then(() => {
     const PORT = process.env.PORT || 3000;
@@ -41,17 +48,7 @@ conectarDB()
     process.exit(1);
   });
 
-app.get("/", (req, res) => {
-  res.send("¡Servidor funcionando!");
-});
-
-// Middleware global de manejo de errores
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Algo salió mal" });
-});
-
-// Cierre limpio de conexión con la BD
+// Cierre limpio
 process.on("SIGINT", async () => {
   console.log("Cerrando conexión con la base de datos...");
   await client.close();

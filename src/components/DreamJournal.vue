@@ -16,6 +16,13 @@
         placeholder="Describe your dream in detail..."
       />
     </div>
+    
+    <!-- Mostrar la interpretación si está disponible -->
+    <div v-if="interpretation" class="text-lg text-white mt-6 p-4 bg-gray-800 rounded-lg">
+      <h2 class="text-2xl font-bold">Interpretation:</h2>
+      <p>{{ interpretation }}</p>
+    </div>
+
     <button
       type="submit"
       class="mystical-button w-full py-4 px-6 rounded-lg text-white uppercase tracking-widest 
@@ -31,11 +38,13 @@
 import { ref, watch } from 'vue';
 import { Sparkles } from 'lucide-vue-next';
 
-const props = defineProps<{ modelValue: string }>();
+// Recibir la interpretación como prop
+const props = defineProps<{ modelValue: string, interpretation: string | null }>();
 const emits = defineEmits(['update:modelValue', 'submit']);
 
 const localDream = ref(props.modelValue);
 
+// Sincronizar el valor de la prop con el localDream
 watch(() => props.modelValue, (val) => {
   localDream.value = val;
 });
@@ -45,6 +54,6 @@ watch(localDream, (val) => {
 });
 
 const onSubmit = () => {
-  emits('submit');
+  emits('submit'); // Emite el evento 'submit' hacia el componente padre
 };
 </script>

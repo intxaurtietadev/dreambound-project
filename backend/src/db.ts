@@ -8,20 +8,18 @@ const client = new MongoClient(uri);
 
 let db: Db;
 
-// Función para conectar a la base de datos
 export async function conectarDB(): Promise<Db> {
   if (!db) {
     try {
       await client.connect();
-      db = client.db("miBaseDeDatos"); // Aquí usas el nombre de tu base de datos
-      console.log("✅ Base de datos conectada");
+      db = client.db("dreamboundDB");
+      console.log("✅ Conectado a MongoDB");
     } catch (error) {
-      console.error("❌ Error al conectar a la base de datos:", error);
+      console.error("❌ Error de conexión a MongoDB:", error);
       throw error;
     }
   }
   return db;
 }
 
-// Exponer `client` para poder cerrarlo desde otro archivo
 export { client };

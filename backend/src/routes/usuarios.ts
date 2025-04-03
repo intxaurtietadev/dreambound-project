@@ -1,124 +1,85 @@
-import express, { Request, Response } from "express";
-import { ObjectId } from "mongodb";
-import bcrypt from "bcrypt";
-import { conectarDB } from "../db";
-import { IUsuario, Dream } from "../models/Usuarios";
-import { verifyToken, AuthRequest } from "../middleware/verifyToken";
+import { Router, Response } from 'express';
+import { Collection, ObjectId, UpdateFilter } from 'mongodb';
+import { IUsuario, Dream } from '../models/Usuarios';
+import { verifyToken, AuthRequest } from '../middleware/verifyToken';
+import { conectarDB } from '../db';
 
-const router = express.Router();
+const router = Router();
 
-// Obtener todos los usuarios
-router.get("/", async (req: Request, res: Response) => {
+// Helper para errores
+const handleError = (error: unknown, res: Response, context: string) => {
+  console.error(`Error en ${context}:`, error);
+  return res.status(500).json({ error: `Error al ${context}` });
+};
+
+// Obtener usuario actual
+router.get("/me", verifyToken, async (req: AuthRequest, res: Response) => {
   try {
     const db = await conectarDB();
-    const usuarios = await db.collection<IUsuario>("usuarios").find().toArray();
-    res.json(usuarios);
-  } catch (err) {
-    console.error("Error al obtener usuarios:", err);
-    res.status(500).json({ error: "Error al obtener usuarios" });
+    const usuarios = db.collection<IUsuario>('usuarios');
+    const usuario = await usuarios.findOne(
+      { _id: new ObjectId(req.usuarioId) },
+      { projection: { password: 0 } }
+    );
+    
+    return usuario 
+      ? res.status(200).json(usuario)
+      : res.status(404).json({ error: "Usuario no encontrado" });
+  } catch (error) {
+    return handleError(error, res, "obtener usuario");
   }
 });
 
-// Crear un nuevo usuario
-router.post("/", async (req: Request<{}, {}, Partial<IUsuario>>, res: Response) => {
+// Actualizar usuario
+router.put("/me", verifyToken, async (req: AuthRequest<{}, {}, Partial<IUsuario>>, res: Response) => {
   try {
-    const { nombre, email, password, avatarUrl = "", bio = "" } = req.body;
-
-    if (!nombre || !email || !password) {
-      return res.status(400).json({ error: "El nombre, email y contraseña son obligatorios" });
-    }
-
     const db = await conectarDB();
-    const existingUser = await db.collection<IUsuario>("usuarios").findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: "El email ya está en uso" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const nuevoUsuario: IUsuario = {
-      nombre,
-      email,
-      password: hashedPassword,
-      avatarUrl,
-      bio,
-      stats: {
-        totalDreams: 0,
-        lucidDreams: 0,
-        currentStreak: 0,
-      },
-      commonThemes: [],
-      recentDreams: [],
+    const usuarios = db.collection<IUsuario>('usuarios');
+    
+    const update: UpdateFilter<IUsuario> = {
+      $set: req.body
     };
 
-    const resultado = await db.collection<IUsuario>("usuarios").insertOne(nuevoUsuario);
-
-    res.json({
-      message: "Usuario creado exitosamente",
-      insertedId: resultado.insertedId,
-      usuario: nuevoUsuario,
-    });
-  } catch (err) {
-    console.error("Error al crear usuario:", err);
-    res.status(500).json({ error: "Error al crear el usuario" });
-  }
-});
-
-// Obtener un usuario por ID
-router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
-  try {
-    const db = await conectarDB();
-    const { id } = req.params;
-
-    const usuario = await db.collection<IUsuario>("usuarios").findOne({ _id: new ObjectId(id) });
-
-    if (!usuario) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
-    }
-
-    res.json(usuario);
-  } catch (err) {
-    console.error("Error al obtener el usuario:", err);
-    res.status(500).json({ error: "Error al obtener el usuario" });
-  }
-});
-
-// Añadir un sueño a un usuario (ruta protegida)
-router.patch("/:id/dreams", verifyToken, async (req: AuthRequest<{ id: string }, {}, Dream>, res: Response) => {
-  try {
-    const db = await conectarDB();
-    const { id } = req.params;
-    const nuevoSueno = req.body;
-
-    if (!nuevoSueno.title || !nuevoSueno.description || !nuevoSueno.date || !Array.isArray(nuevoSueno.emotions)) {
-      return res.status(400).json({ error: "Datos del sueño inválidos" });
-    }
-
-    if (req.usuarioId !== id) {
-      return res.status(403).json({ error: "No tienes permiso para modificar este perfil" });
-    }
-
-    const resultado = await db.collection<IUsuario>("usuarios").updateOne(
-      { _id: new ObjectId(id) },
-      {
-        $push: { recentDreams: nuevoSueno },
-        $inc: { "stats.totalDreams": 1, "stats.currentStreak": 1 },
-      }
+    const result = await usuarios.updateOne(
+      { _id: new ObjectId(req.usuarioId) },
+      update
     );
 
-    if (resultado.modifiedCount === 0) {
-      return res.status(404).json({ error: "Usuario no encontrado o sin cambios" });
-    }
+    return result.matchedCount > 0
+      ? res.status(200).json({ message: "Usuario actualizado" })
+      : res.status(404).json({ error: "Usuario no encontrado" });
+  } catch (error) {
+    return handleError(error, res, "actualizar usuario");
+  }
+});
 
-    const usuarioActualizado = await db.collection<IUsuario>("usuarios").findOne({ _id: new ObjectId(id) });
+// Añadir sueño
+router.post("/me/dreams", verifyToken, async (req: AuthRequest<{}, {}, Dream>, res: Response) => {
+  try {
+    const newDream: Dream = {
+      ...req.body,
+      id: new ObjectId().toString(),
+      date: new Date().toISOString()
+    };
 
-    res.json({
-      message: "Sueño añadido correctamente",
-      recentDreams: usuarioActualizado?.recentDreams || [],
-    });
-  } catch (err) {
-    console.error("Error al añadir el sueño:", err);
-    res.status(500).json({ error: "Error al añadir el sueño" });
+    const db = await conectarDB();
+    const usuarios = db.collection<IUsuario>('usuarios');
+    
+    const update: UpdateFilter<IUsuario> = {
+      $push: { recentDreams: newDream },
+      $inc: { "stats.totalDreams": 1 }
+    };
+
+    const result = await usuarios.updateOne(
+      { _id: new ObjectId(req.usuarioId) },
+      update
+    );
+
+    return result.matchedCount > 0
+      ? res.status(201).json(newDream)
+      : res.status(404).json({ error: "Usuario no encontrado" });
+  } catch (error) {
+    return handleError(error, res, "agregar sueño");
   }
 });
 

@@ -1,16 +1,22 @@
 {
-    "compilerOptions": {
-      "target": "ES6", 
-      "module": "CommonJS",
-      "moduleResolution": "node", 
-      "outDir": "./dist", 
-      "rootDir": "./src", 
-      "strict": true,
-      "esModuleInterop": true, 
-      "forceConsistentCasingInFileNames": true, 
-      "skipLibCheck": true 
+  "compilerOptions": {
+    "target":  "ESNext",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@models/*": ["models/*"],
+      "@middleware/*": ["middleware/*"]
     },
-    "include": ["src/**/*.ts"],
-    "exclude": ["node_modules"]
-  }
-  
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node", "mongodb"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}
