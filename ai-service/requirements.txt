@@ -1,11 +1,14 @@
+# dreambound-project-main/ai-service/requirements.txt
+
 fastapi
 uvicorn
-langchain
-together
-python-dotenv
-torch==2.1.0
-transformers==4.30.0
-sentence-transformers==2.2.0
-pinecone-client==2.2.0
-python-dotenv==1.0.0
-huggingface_hub==0.15.1
+# sentence-transformers Usa el modelo directamente
+sentence-transformers>=2.2.0
+pinecone>=3.0.0  # Actualizamos a una versión reciente
+python-dotenv>=1.0.0
+torch>=2.1.0
+transformers>=4.30.0 # Mantén versiones compatibles con tu modelo Llama si es necesario
+# langchain # Quitado si no se usa para la interpretación
+# together  # Quitado si no se usa para la interpretación
+flask # Añadido para Flask
+requests # Podría ser útil, aunque usaremos Flask directamente
