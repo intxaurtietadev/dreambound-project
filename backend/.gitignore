@@ -1,0 +1,63 @@
+# ---- Backend Node.js con TypeScript ----
+
+# Dependencias
+# Ignora la carpeta donde se descargan los paquetes de npm/yarn/pnpm
+node_modules/
+
+# Archivos de compilación TypeScript
+# Ignora la carpeta donde se genera el JavaScript compilado (según tu tsconfig.json)
+dist/
+# Opcional: Ignora todos los archivos JS y Map en la raíz si solo compilas a dist
+# *.js
+# *.js.map
+
+# Variables de Entorno
+# ¡MUY IMPORTANTE! Nunca subas tus claves secretas o configuración específica de entorno
+.env
+.env.*
+!.env.example # Pero SÍ incluye archivos de ejemplo para que otros sepan qué variables se necesitan
+
+# Logs
+# Ignora archivos y carpetas de logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Archivos generados por el Sistema Operativo
+.DS_Store
+Thumbs.db
+ehthumbs.db
+*.stackdump
+
+# Archivos de configuración de IDEs/Editores
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de Nodemon (si usas configuración local)
+# nodemon.json
+
+# Salida de Pruebas y Cobertura
+coverage/
+.nyc_output/
+
+# Otros
+*.tmp
+*.sw? # Archivos swap de Vim
+
+# Paquetes de npm (generados por npm pack)
+*.tgz
+
+# Reportes de Node.js
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+pid.[0-9]*.log
+*.diag
