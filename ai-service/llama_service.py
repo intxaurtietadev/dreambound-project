@@ -1,44 +1,44 @@
+# llama_service.py
+# --- VERSIÓN con google/flan-t5-small Y PROMPT EN INGLÉS ---
+
 import os
 import torch
 from flask import Flask, request, jsonify
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from dotenv import load_dotenv
 
 # --- Configuración Inicial ---
 load_dotenv()
 
 EMBEDDING_MODEL_NAME = 'sentence-transformers/all-MiniLM-L6-v2'
-LLAMA_MODEL_NAME = os.getenv("LLAMA_MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
+LLAMA_MODEL_NAME = "google/flan-t5-small" # Mantenemos flan-t5-small
+
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME")
-# *** LEER EL TOKEN DEL .ENV ***
-HUGGING_FACE_TOKEN = os.getenv("HUGGING_FACE_TOKEN") # Lee el token añadido
+HUGGING_FACE_TOKEN = os.getenv("HUGGING_FACE_TOKEN")
 
 if not PINECONE_API_KEY or not PINECONE_INDEX_NAME:
     raise ValueError("PINECONE_API_KEY y PINECONE_INDEX_NAME deben estar definidos en .env")
-# *** AVISO SI FALTA EL TOKEN (aunque podría funcionar sin él si el login CLI fue suficiente) ***
-if not HUGGING_FACE_TOKEN:
-    print("ADVERTENCIA: HUGGING_FACE_TOKEN no encontrado en .env. Se intentará cargar el modelo sin token explícito.")
-
 
 # --- Inicialización de Modelos y Servicios (Global) ---
 print("Inicializando Flask...")
 app = Flask(__name__)
 
-# ... (Inicialización Pinecone igual que antes) ...
 print(f"Inicializando Pinecone con índice: {PINECONE_INDEX_NAME}...")
 try:
     pc = Pinecone(api_key=PINECONE_API_KEY)
     index = pc.Index(PINECONE_INDEX_NAME)
     print("Pinecone inicializado correctamente.")
-    print(index.describe_index_stats())
+    try:
+        print(index.describe_index_stats())
+    except Exception as pinecone_stat_err:
+        print(f"Advertencia: No se pudieron obtener stats de Pinecone: {pinecone_stat_err}")
 except Exception as e:
     print(f"Error inicializando Pinecone: {e}")
     index = None
 
-# ... (Inicialización Embedding Model igual que antes) ...
 print(f"Cargando modelo de embedding: {EMBEDDING_MODEL_NAME}...")
 try:
     embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
@@ -47,115 +47,122 @@ except Exception as e:
     print(f"Error cargando modelo de embedding: {e}")
     embedding_model = None
 
-
-print(f"Cargando modelo de generación Llama: {LLAMA_MODEL_NAME}...")
+print(f"Cargando modelo de generación: {LLAMA_MODEL_NAME}...")
 try:
-    # *** PASAR EL TOKEN EXPLÍCITAMENTE ***
-    tokenizer = AutoTokenizer.from_pretrained(
-        LLAMA_MODEL_NAME,
-        token=HUGGING_FACE_TOKEN # <-- Añadido
-    )
-    generation_model = AutoModelForCausalLM.from_pretrained(
-        LLAMA_MODEL_NAME,
-        torch_dtype=torch.float16,
-        device_map="auto",
-        token=HUGGING_FACE_TOKEN # <-- Añadido
-    )
-    print("Modelo de generación Llama cargado.")
+    tokenizer = AutoTokenizer.from_pretrained(LLAMA_MODEL_NAME)
+    generation_model = AutoModelForSeq2SeqLM.from_pretrained(LLAMA_MODEL_NAME)
+    print("Modelo de generación cargado.")
 except Exception as e:
-    print(f"Error cargando modelo Llama: {e}")
-    # Imprime más detalles del error si es posible
+    print(f"Error cargando modelo de generación: {e}")
     if hasattr(e, 'response') and hasattr(e.response, 'text'):
-         print(f"Detalles del error HTTP: {e.response.text}")
+        print(f"Detalles del error HTTP: {e.response.text}")
     tokenizer = None
     generation_model = None
 
-# ... (Resto del código: Parámetros de generación, función get_relevant_archetypes, ruta /interpret-dream, ejecución del servidor) ...
-# (El resto del código no necesita cambios)
 
 # --- Parámetros de Generación ---
-MAX_LENGTH_NEW_TOKENS = 1024
+MAX_LENGTH_NEW_TOKENS = 256
 TEMPERATURE = 0.7
 TOP_P = 0.9
-NO_REPEAT_NGRAM_SIZE = 3
+REPETITION_PENALTY=1.2
 
-# --- Función para Consultar Pinecone ---
+# --- Función para Consultar Pinecone (Sin cambios) ---
 def get_relevant_archetypes(dream_text, top_k=3):
     if not index or not embedding_model:
         print("Error: Pinecone o modelo de embedding no inicializado.")
         return []
     try:
         print(f"Generando embedding para: '{dream_text[:50]}...'")
+        # IMPORTANTE: Asumimos que el embedding funciona bien para inglés/español
+        # all-MiniLM-L6-v2 es multilingüe, pero funciona mejor si el idioma es consistente.
+        # Si el dream_text viene del usuario en español, el embedding será en 'español'.
+        # Si los arquetipos en Pinecone están descritos/indexados en inglés,
+        # la búsqueda de similitud podría no ser óptima.
+        # Considera traducir el dream_text a inglés ANTES de generar el embedding si es necesario.
         embedding = embedding_model.encode(dream_text).tolist()
         print(f"Consultando Pinecone (índice: {PINECONE_INDEX_NAME}, top_k={top_k})...")
         results = index.query(vector=embedding, top_k=top_k, include_metadata=True)
-        print("Resultados de Pinecone:", results)
+        print("Resultados crudos de Pinecone:", results)
 
         archetypes = []
-        if results.matches:
+        if results and results.matches:
             for match in results.matches:
-                if match.metadata and 'archetype' in match.metadata and 'description' in match.metadata:
+                if hasattr(match, 'metadata') and match.metadata and \
+                'archetype' in match.metadata and 'description' in match.metadata:
                     archetypes.append({
-                        "archetype": match.metadata['archetype'],
-                        "description": match.metadata['description'],
-                        "score": match.score
+                        "archetype": match.metadata.get('archetype', 'Unknown'), # <-- Traducido
+                        "description": match.metadata.get('description', 'No description'), # <-- Traducido
+                        "score": match.score if hasattr(match, 'score') else 0.0
                     })
                 else:
-                    print(f"Advertencia: Metadatos incompletos o faltantes para ID {match.id}")
-        print(f"Arquetipos encontrados: {len(archetypes)}")
+                    match_id = match.id if hasattr(match, 'id') else 'Unknown' # <-- Traducido
+                    print(f"Warning: Incomplete or missing metadata for ID {match_id}") # <-- Traducido
+        else:
+            print("Warning: Pinecone response does not contain 'matches' or is empty.") # <-- Traducido
+
+        print(f"Valid archetypes found: {len(archetypes)}") # <-- Traducido
         return archetypes
     except Exception as e:
-        print(f"Error consultando Pinecone: {e}")
+        print(f"Error querying Pinecone: {e}") # <-- Traducido
         return []
+
 
 # --- Ruta de Interpretación ---
 @app.route('/interpret-dream', methods=['POST'])
 def interpret_dream_route():
-    global tokenizer, generation_model
+    global tokenizer, generation_model, index, embedding_model
 
+    # Validaciones iniciales (mensajes en inglés ahora)
     if not tokenizer or not generation_model:
-        return jsonify({"error": "Modelo de generación Llama no cargado"}), 500
+        return jsonify({"error": "Generation model not loaded"}), 500
     if not index:
-        return jsonify({"error": "Índice de Pinecone no disponible"}), 500
+        return jsonify({"error": "Pinecone index not available"}), 500
     if not embedding_model:
-        return jsonify({"error": "Modelo de embedding no disponible"}), 500
-
+        return jsonify({"error": "Embedding model not available"}), 500
 
     data = request.get_json()
-    dream_text = data.get('dream_text', '')
+    if not data:
+        return jsonify({"error": "Request body must be JSON"}), 400
+    dream_text = data.get('dream_text', '') # Asumimos que el usuario escribe el sueño en cualquier idioma
 
     if not dream_text:
-        return jsonify({"error": "No se proporcionó dream_text"}), 400
+        return jsonify({"error": "dream_text not provided"}), 400
 
-    print("\n--- Nueva Solicitud de Interpretación ---")
-    print(f"Texto del sueño recibido: '{dream_text[:100]}...'")
+    print("\n--- New Interpretation Request ---") # <-- Traducido
+    print(f"Received dream text: '{dream_text[:100]}...'") # <-- Traducido
 
+    # NOTA: get_relevant_archetypes usará el idioma original del dream_text para el embedding
     relevant_archetypes = get_relevant_archetypes(dream_text, top_k=3)
 
     archetypes_info = ""
+    # La descripción de arquetipos viene de Pinecone, asumimos que está en inglés o el idioma deseado
     if relevant_archetypes:
-        archetypes_info = "\nConsidera los siguientes arquetipos posiblemente relevantes basados en el análisis de similitud (puntuación más alta indica mayor relevancia):\n"
+        archetypes_info = "\nConsider the following archetypes possibly relevant based on similarity analysis (higher score means higher relevance):\n" # <-- Traducido
         for archetype in relevant_archetypes:
-            archetypes_info += f"- {archetype.get('archetype')} (Relevancia: {archetype.get('score', 0):.2f}): {archetype.get('description')}\n"
+            # Asegúrate que la descripción del arquetipo en Pinecone esté en inglés si quieres que se integre bien
+            archetypes_info += f"- {archetype.get('archetype')} (Relevance: {archetype.get('score', 0):.2f}): {archetype.get('description')}\n"
     else:
-        archetypes_info = "\nNo se encontraron arquetipos específicos altamente relevantes mediante análisis de similitud, realiza una interpretación general basada en símbolos y emociones presentes.\n"
+        archetypes_info = "\nNo specific highly relevant archetypes were found via similarity analysis. Perform a general interpretation based on symbols and emotions present.\n" # <-- Traducido
 
-    prompt = f"""Eres un experto en psicología junguiana especializado en interpretación de sueños. Analiza el siguiente sueño desde una perspectiva junguiana profunda. Considera los símbolos presentes, las emociones expresadas y los posibles arquetipos implicados. Si se proporcionan arquetipos relevantes, intégralos en tu análisis, explicando cómo podrían manifestarse en el sueño. Ofrece una interpretación detallada y reflexiva, conectando los elementos del sueño con los procesos de individuación, la sombra, el anima/animus, y otros conceptos junguianos pertinentes. Evita respuestas genéricas.
+    # ---- CAMBIO 4: Prompt en Inglés ----
+    prompt = f"""You are an expert in Jungian psychology specializing in dream interpretation. Analyze the following dream from a deep Jungian perspective. Consider the symbols present, the emotions expressed, and the possible archetypes involved. If relevant archetypes are provided, integrate them into your analysis, explaining how they might manifest in the dream. Offer a detailed and thoughtful interpretation, connecting the dream elements with the processes of individuation, the shadow, the anima/animus, and other pertinent Jungian concepts. Avoid generic answers.
 
-Sueño a interpretar:
+Dream to interpret:
 "{dream_text}"
-{archetypes_info}
-Interpretación Junguiana Detallada:"""
 
-    # --- Línea corregida ---
-    # Ahora está indentada correctamente DENTRO de la función interpret_dream_route
-    print(f"\nPrompt enviado al modelo Llama:\n{prompt}\n")
+{archetypes_info}
+Detailed Jungian Interpretation:"""
+    # ----------------------------------
+
+    print(f"\nPrompt sent to model ({LLAMA_MODEL_NAME}):\n{prompt}\n") # <-- Traducido
 
     try:
-        # --- Generación ---
-        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512).to(generation_model.device)
+        if tokenizer is None or generation_model is None:
+            raise Exception("Tokenizer or Model not initialized")
 
-        print("Generando interpretación...")
+        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
+
+        print(f"Generating interpretation (max {MAX_LENGTH_NEW_TOKENS} tokens)...") # <-- Traducido
         with torch.no_grad():
             outputs = generation_model.generate(
                 **inputs,
@@ -163,14 +170,15 @@ Interpretación Junguiana Detallada:"""
                 temperature=TEMPERATURE,
                 top_p=TOP_P,
                 do_sample=True,
-                no_repeat_ngram_size=NO_REPEAT_NGRAM_SIZE,
-                pad_token_id=tokenizer.eos_token_id
+                repetition_penalty=REPETITION_PENALTY
             )
 
-        interpretation = tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+        interpretation = tokenizer.decode(outputs[0], skip_special_tokens=True)
         interpretation = interpretation.strip()
-        print(f"\nInterpretación generada:\n{interpretation}")
+        # Log en inglés
+        print(f"\nGenerated interpretation:\n{interpretation}")
 
+        # Respuesta JSON sin cambios en estructura
         return jsonify({
             "interpretation": interpretation,
             "archetypes_found": relevant_archetypes,
@@ -178,16 +186,20 @@ Interpretación Junguiana Detallada:"""
         })
 
     except Exception as e:
-        print(f"Error durante la generación con Llama: {e}")
-        return jsonify({"error": f"Error generando la interpretación: {e}"}), 500
+        import traceback
+        # Log en inglés
+        print(f"Error during generation with {LLAMA_MODEL_NAME}:")
+        traceback.print_exc()
+        # Mensaje de error en inglés
+        return jsonify({"error": f"Error generating interpretation: {str(e)}"}), 500
 
-# ... (resto del código de ejecución del servidor igual) ...
 
 # --- Ejecución del Servidor ---
 if __name__ == '__main__':
     if embedding_model and index and tokenizer and generation_model:
-        print("Modelos y Pinecone listos. Iniciando servidor Flask...")
+        # Mensaje en inglés
+        print("Models and Pinecone ready. Starting Flask server...")
         app.run(host='0.0.0.0', port=5001, debug=True)
     else:
-        print("Error: No se pudieron cargar todos los modelos o conectar a Pinecone. El servidor no se iniciará.")
-
+        # Mensaje en inglés
+        print("Error: Could not load all models or connect to Pinecone. Server will not start.")
