@@ -1,5 +1,5 @@
 // dreambound-project-main/backend/src/server.ts
-// --- VERSIÓN CON LOGS DE DIAGNÓSTICO ---
+// --- VERSIÓN CON LOG DE DIAGNÓSTICO ANTES DE /api/auth ---
 
 import express from 'express';
 import cors from 'cors';
@@ -27,14 +27,24 @@ console.log("Middleware configurado.");
 // Rutas
 console.log("Montando rutas...");
 app.use("/usuarios", usuariosRoutes); // Rutas de usuarios generales (si aún las usas)
-app.use("/api/auth", authRoutes);    // Rutas de autenticación
 
-// ---- Log de Diagnóstico para jungianRoutes ----
+// ---- NUEVO MIDDLEWARE DE LOG ----
+// Este log se ejecutará para CUALQUIER petición que empiece con /api/auth ANTES
+// de que llegue a las rutas definidas en authRoutes (auth.ts)
+app.use("/api/auth", (req, res, next) => {
+  // Usamos template literals correctamente con ${}
+  console.log(`--> Petición ${req.method} recibida para /api/auth${req.path}`);
+  next(); // MUY IMPORTANTE llamar a next() para pasar a la siguiente ruta/middleware
+});
+// ---- FIN NUEVO MIDDLEWARE DE LOG ----
+
+app.use("/api/auth", authRoutes);    // Rutas de autenticación (definidas en auth.ts)
+
+// ---- Log de Diagnóstico para jungianRoutes (lo dejamos por si acaso) ----
 console.log("--- Inspeccionando jungianRoutes ---");
 try {
-  // Intentamos acceder a propiedades comunes de un router Express para ver si es válido
-  console.log("Tipo de jungianRoutes:", typeof jungianRoutes); // Debería ser 'function'
-  console.log("Stack de jungianRoutes (si existe):", (jungianRoutes as any).stack ? `${(jungianRoutes as any).stack.length} rutas internas` : 'Stack no disponible'); // Muestra si tiene rutas definidas
+  console.log("Tipo de jungianRoutes:", typeof jungianRoutes);
+  console.log("Stack de jungianRoutes (si existe):", (jungianRoutes as any).stack ? `${(jungianRoutes as any).stack.length} rutas internas` : 'Stack no disponible');
 } catch (e) {
   console.error("Error al inspeccionar jungianRoutes:", e);
 }

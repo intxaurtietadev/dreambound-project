@@ -12,7 +12,7 @@ export async function conectarDB(): Promise<Db> {
   if (!db) {
     try {
       await client.connect();
-      db = client.db("dreamboundDB");
+      db = client.db("miBaseDeDatos");
       console.log("✅ Conectado a MongoDB");
     } catch (error) {
       console.error("❌ Error de conexión a MongoDB:", error);
