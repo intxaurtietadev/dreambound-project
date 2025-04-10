@@ -1,16 +1,23 @@
-# dreambound-project-main/ai-service/requirements.txt
+# Web Framework
+Flask>=2.3.0
 
-fastapi
-uvicorn
-# sentence-transformers Usa el modelo directamente
+pinecone-client>=4.0.0
+
+# Embedding Model Library
 sentence-transformers>=2.2.0
-pinecone>=3.0.0  # Actualizamos a una versión reciente
+
+# LLM Library (CPU Optimized)
+llama-cpp-python>=0.2.50
+
+# Environment Variables
 python-dotenv>=1.0.0
+
+# Dependency for sentence-transformers (and potentially others)
 torch>=2.1.0
-transformers>=4.30.0 # Mantén versiones compatibles con tu modelo Llama si es necesario
-# langchain # Quitado si no se usa para la interpretación
-# together  # Quitado si no se usa para la interpretación
-flask # Añadido para Flask
-requests # Podría ser útil, aunque usaremos Flask directamente
-accelerate>=0.26.0 
-llama-cpp-python
+
+# Necesario si usas torch con ciertas operaciones o hardware
+# torchvision
+# torchaudio
+
+# Comentario sobre dependencias de build para llama-cpp-python
+# Nota: llama-cpp-python puede requerir 'build-essential', 'cmake' o similares durante la instalación.
