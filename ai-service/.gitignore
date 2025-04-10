@@ -25,3 +25,5 @@ pinecone_data/
 
 # Archivos de logs
 *.log
+
+models/*.gguf

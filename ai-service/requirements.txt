@@ -13,3 +13,4 @@ transformers>=4.30.0 # Mantén versiones compatibles con tu modelo Llama si es n
 flask # Añadido para Flask
 requests # Podría ser útil, aunque usaremos Flask directamente
 accelerate>=0.26.0 
+llama-cpp-python

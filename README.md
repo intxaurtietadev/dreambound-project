@@ -121,13 +121,11 @@ PINECONE_INDEX_NAME="dreambound" # Or your preferred name
 (Optional) Define the LLM model to use (e.g., Mistral if Llama 2 access is problematic)
 =======================================================================================
 
-LLAMA_MODEL_NAME="mistralai/Mistral-7B-Instruct-v0.2"
+# Path to the downloaded GGUF model file (relative to llama_service.py)
+# Download from Hugging Face (e.g., TheBloke/Mistral-7B-Instruct-v0.2-GGUF)
+# Example uses Q4_K_M quantization
+LLAMA_GGUF_MODEL_PATH="./models/mistral-7b-instruct-v0.2.Q4_K_M.gguf"
 
-LLAMA_MODEL_NAME="meta-llama/Llama-2-7b-chat-hf" # If you have access to Llama 2
-================================================================================
-
-Hugging Face Token (Generated at <https://huggingface.co/settings/tokens>)
-==========================================================================
 
 Required for downloading models (ensure it has read permissions and access to public gated repos)
 =================================================================================================
