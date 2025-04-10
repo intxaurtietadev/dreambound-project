@@ -5,22 +5,19 @@ import { ObjectId } from 'mongodb'; // Necesario para _id en IUsuario
 
 // Interfaz Dream
 export interface Dream {
-  id: string; // ID generado por nosotros (string)
-  date: string; // Fecha en formato ISO string
-  title: string; // Título del sueño (obligatorio)
-  description: string; // Descripción (obligatoria)
-
-  // --- CAMBIO AQUÍ: Añadido '?' para hacer 'emotions' opcional ---
-  emotions?: string[]; // Lista de emociones (opcional ahora)
-  // --- FIN CAMBIO ---
-
-  // Asegúrate de que estas otras propiedades también estén si las eliminaste antes
-  // por error, o elimínalas si definitivamente no las quieres:
-  interpretation?: string | null; // Opcional
-  tags?: string[];             // Opcional
-  sentiment?: string | null;     // Opcional
-
-  // ...cualquier otro campo que definas para un sueño...
+  id: string;
+  date: string;
+  title: string;
+  description: string;
+  interpretation?: string | null;
+  reflection?: string | null;
+  // --- AÑADIR ESTA LÍNEA ---
+  archetypesFound?: Array<{ name: string; score: number }>; // Array de objetos (opcional)
+  // --- FIN LÍNEA A AÑADIR ---
+  emotions?: string[]; // La hicimos opcional antes
+  // Asegúrate de que los siguientes también estén si los quieres (opcionales)
+  tags?: string[];
+  sentiment?: string | null;
 }
 
 // Interfaz IUsuario

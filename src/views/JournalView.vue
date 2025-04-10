@@ -7,8 +7,8 @@
         :interpretation="null"
       />
 
-      <div v-if="isLoading" class="text-center text-gray-400 animate-pulse pt-8">
-        Consulting the oneiric realms... 
+      <div v-if="isLoading" class="text-center text-purple-400 animate-pulse pt-8">
+        Consulting the oneiric realms... ✨ (This may take a bit with the AI)
       </div>
 
       <div v-if="error" class="p-4 bg-red-900 bg-opacity-40 border border-red-700 rounded text-red-300 mt-8">
@@ -47,11 +47,14 @@
              <Heart class="text-gray-400 w-4 h-4" />
              Personal Reflection
            </h3>
+
           <DreamReflection
             :interpretation="interpretation"
             :reflection="reflection"
             @save-reflection="saveReflection"
           />
+          <p v-if="reflectionSuccessMessage" class="mt-4 text-sm text-green-400">{{ reflectionSuccessMessage }}</p>
+          <p v-if="reflectionError" class="mt-4 text-sm text-red-400">Error saving reflection: {{ reflectionError }}</p>
         </div>
 
       </div>
@@ -61,7 +64,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Moon, Sparkles, Heart } from 'lucide-vue-next';
+import { Moon, Heart } from 'lucide-vue-next';
 import DreamJournal from '../components/DreamJournal.vue';
 import DreamReflection from '../components/DreamReflection.vue';
 import api from '../api/api';
@@ -71,11 +74,13 @@ import axios from 'axios';
 
 // --- Estado Reactivo ---
 const dream = ref('');
-const reflection = ref('');
+const reflection = ref(''); // Este es el v-model que debería usar DreamReflection
 const interpretation = ref<string | null>(null);
 const isLoading = ref(false);
-const error = ref<string | null>(null); // Errores para el usuario (en inglés)
+const error = ref<string | null>(null); // Error general o de guardado de sueño
 const usedFallback = ref(false);
+const reflectionSuccessMessage = ref<string | null>(null); // Mensaje éxito reflexión
+const reflectionError = ref<string | null>(null); // Error específico reflexión
 
 interface FoundArchetype {
   archetype: string;
@@ -85,26 +90,30 @@ interface FoundArchetype {
 const foundArchetypes = ref<FoundArchetype[]>([]);
 const authStore = useAuthStore();
 const userId = authStore.userId;
-const dreamId = ref<string | null>(null);
+const dreamId = ref<string | null>(null); // <--- Guardaremos el ID del sueño aquí
 
 // --- handleSubmit ---
 const handleSubmit = async () => {
+  // Resetear estado
   isLoading.value = true;
   error.value = null;
+  reflection.value = ''; // Limpiar reflexión anterior
+  reflectionSuccessMessage.value = null;
+  reflectionError.value = null;
   interpretation.value = null;
   foundArchetypes.value = [];
-  dreamId.value = null;
+  dreamId.value = null; // Limpiar ID de sueño anterior
   usedFallback.value = false;
+
   const token = authStore.token;
 
-  // Validaciones iniciales 
   if (!token || !userId) {
-    error.value = "Not authenticated or missing User ID. Please log in."; // <-- Inglés (Usuario)
+    error.value = "Not authenticated or missing User ID. Please log in.";
     isLoading.value = false;
     return;
   }
   if (!dream.value.trim()) {
-     error.value = "Please describe your dream."; // <-- Inglés (Usuario)
+     error.value = "Please describe your dream.";
      isLoading.value = false;
      return;
   }
@@ -113,6 +122,7 @@ const handleSubmit = async () => {
     let interpretationResult: string | null = null;
     let archetypesResult: FoundArchetype[] = [];
 
+    // ---- Llamada al Servicio de IA ----
     try {
       console.log("Enviando sueño para interpretar al servicio de IA (puerto 5001)...");
       const aiServiceUrl = 'http://localhost:5001/interpret-dream';
@@ -123,19 +133,19 @@ const handleSubmit = async () => {
       });
 
       if (!response.ok) {
-        throw new Error(`El servicio de IA devolvió un error: ${response.status} ${response.statusText}`);
+        throw new Error(`AI service returned an error: ${response.status} ${response.statusText}`);
       }
       const aiData = await response.json();
-
       console.log("Respuesta de interpretación (IA) recibida:", aiData);
       if (!aiData || typeof aiData.interpretation !== 'string') {
-          throw new Error("Respuesta inválida del servicio de IA.");
+           throw new Error("Invalid response from AI service.");
       }
-      interpretationResult = aiData.interpretation; // Interpretación en Inglés (de la IA)
+      interpretationResult = aiData.interpretation;
       archetypesResult = Array.isArray(aiData.archetypes_found) ? aiData.archetypes_found : [];
       usedFallback.value = false;
 
     } catch (aiError: any) {
+      // ---- Fallback al Intérprete Local ----
       console.error("⚠️ Error al llamar al servicio de IA, usando fallback local:", aiError);
       usedFallback.value = true;
       archetypesResult = [];
@@ -146,6 +156,7 @@ const handleSubmit = async () => {
     interpretation.value = interpretationResult;
     foundArchetypes.value = archetypesResult;
 
+    // ---- Intento de Guardar el Sueño en Backend Principal ----
     if (interpretation.value) {
         console.log("Intentando guardar el sueño en el backend principal (puerto 3000)...");
         const nuevoSueno = {
@@ -154,6 +165,7 @@ const handleSubmit = async () => {
           date: new Date().toISOString(),
           interpretation: interpretation.value,
           archetypesFound: usedFallback.value ? [] : foundArchetypes.value.map(a => ({ name: a.archetype, score: a.score })),
+          reflection: null // Guardamos reflexión como null inicialmente
         };
         try {
             const saveResponse = await api.post(`/usuarios/me/dreams`, nuevoSueno, {
@@ -163,6 +175,17 @@ const handleSubmit = async () => {
             console.log("🌙 Sueño interpretado y guardado correctamente.");
             error.value = null;
 
+            // ---- CAPTURAR EL ID DEL SUEÑO GUARDADO ----
+            if (saveResponse.data && saveResponse.data.id) {
+                dreamId.value = saveResponse.data.id; // Asumiendo que el backend devuelve el sueño con su 'id'
+                console.log(`ID del sueño guardado: ${dreamId.value}`);
+            } else {
+                 console.warn("El backend no devolvió un ID para el sueño guardado.");
+                 // Podrías poner un error si el ID es crucial para la reflexión
+                 // error.value = "Error: No se recibió ID del sueño guardado.";
+            }
+            // -----------------------------------------
+
         } catch (saveError: any) {
             console.error("💥 Error al guardar el sueño en el backend principal:", saveError);
             if (axios.isAxiosError(saveError)) {
@@ -170,8 +193,9 @@ const handleSubmit = async () => {
             } else {
                  error.value = `Failed to save dream: ${saveError.message}`;
             }
-            interpretation.value = interpretationResult;
-            foundArchetypes.value = archetypesResult;
+            interpretation.value = interpretationResult; // Mantener visible
+            foundArchetypes.value = archetypesResult; // Mantener visible
+            dreamId.value = null; // No tenemos ID si falló el guardado
         }
     }
   } catch (generalError: any) {
@@ -180,19 +204,59 @@ const handleSubmit = async () => {
       interpretation.value = null;
       foundArchetypes.value = [];
       usedFallback.value = false;
+      dreamId.value = null;
   } finally {
     isLoading.value = false;
   }
 };
 
-// --- Guardar Reflexión ---
+// --- Guardar Reflexión (IMPLEMENTADO) ---
 const saveReflection = async (newReflection: string) => {
-  if (!userId || !dreamId.value) {
-    console.error("Falta userId o dreamId para guardar la reflexión.");
+  reflectionSuccessMessage.value = null; // Limpiar mensajes previos
+  reflectionError.value = null;
+
+  // Comprobaciones
+  if (!userId) {
+      reflectionError.value = "User not authenticated."; // Mensaje de error
+      return;
+  }
+  if (!dreamId.value) {
+    reflectionError.value = "Cannot save reflection, dream ID is missing. Please interpret and save the dream first."; // Mensaje de error
+    console.error("Intento de guardar reflexión sin dreamId.");
     return;
   }
-  console.log(`Guardando reflexión para sueño ${dreamId.value}: "${newReflection.substring(0,50)}..."`);
-  // ... (Lógica API pendiente) ...
+   if (typeof newReflection !== 'string') {
+     reflectionError.value = "Reflection text is invalid."; // Mensaje de error
+     return;
+   }
+
+  console.log(`Guardando reflexión para sueño ${dreamId.value}...`);
+  const token = authStore.token; // Necesitamos el token también aquí
+
+  try {
+    // ---- LLAMADA A LA NUEVA RUTA PUT DEL BACKEND ----
+    const response = await api.put(
+      `/usuarios/me/dreams/${dreamId.value}/reflection`, // URL dinámica con dreamId
+      { reflectionText: newReflection }, // Cuerpo de la petición con la reflexión
+      { headers: { Authorization: `Bearer ${token}` } }  // Cabecera de autorización
+    );
+    // -------------------------------------------------
+
+    console.log("Respuesta al guardar reflexión:", response.status, response.data);
+    reflectionSuccessMessage.value = "Reflection saved successfully!"; // Mensaje de éxito
+
+    // Actualizar el valor local de reflection si se guarda bien
+    // (Opcional, depende de si quieres que se mantenga tras guardar o se limpie)
+    // reflection.value = newReflection; // Podrías hacer esto o dejar que se limpie al reinterpretar
+
+  } catch (err: any) {
+    console.error("💥 Error al guardar la reflexión:", err);
+     if (axios.isAxiosError(err)) {
+        reflectionError.value = `Error (${err.response?.status || 'Network'}): ${err.response?.data?.error || err.message}`;
+    } else {
+        reflectionError.value = `Unexpected error saving reflection: ${err.message}`;
+    }
+  }
 };
 
 </script>
