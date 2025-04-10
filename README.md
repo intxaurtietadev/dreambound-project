@@ -87,39 +87,39 @@ You need to create `.env` files in the `backend` and `ai-service` directories.
 **a) Backend (`dreambound-project/backend/.env`):**
 
 Port for the Node.js server (optional, defaults to 3000)
-========================================================
+
 
 PORT=3000
 
 Connection URI for your MongoDB Atlas or local database
-=======================================================
+
 
 MONGO_URI="mongodb+srv://<user>:<password>@<cluster-url>/<database-name>?retryWrites=true&w=majority" # Replace with your actual URI
 
 Secret key for signing JWTs (Invent a long, secure one!)
-========================================================
+
 
 JWT_SECRET="A_VERY_SECRET_AND_LONG_KEY_FOR_JWT"
 
 URL of the Python AI service (make sure it matches where Flask runs)
-====================================================================
+
 
 PYTHON_AI_SERVICE="http://localhost:5001"
 
 **b) AI Service (`dreambound-project/ai-service/.env`):**
 
 Pinecone API Key
-================
+
 
 PINECONE_API_KEY="YOUR_PINECONE_API_KEY"
 
 Pinecone index name you will use/create
-=======================================
+
 
 PINECONE_INDEX_NAME="dreambound" # Or your preferred name
 
 (Optional) Define the LLM model to use (e.g., Mistral if Llama 2 access is problematic)
-=======================================================================================
+
 
 # Path to the downloaded GGUF model file (relative to llama_service.py)
 # Download from Hugging Face (e.g., TheBloke/Mistral-7B-Instruct-v0.2-GGUF)
@@ -128,45 +128,45 @@ LLAMA_GGUF_MODEL_PATH="./models/mistral-7b-instruct-v0.2.Q4_K_M.gguf"
 
 
 Required for downloading models (ensure it has read permissions and access to public gated repos)
-=================================================================================================
+
 
 HUGGING_FACE_TOKEN="hf_YOUR_HUGGING_FACE_TOKEN"
 
 ### 3\. AI Service Setup & Run (Python)
 
 Navigate to the AI service directory
-====================================
+
 
 cd ai-service
 
 Create and activate a virtual environment (recommended)
-=======================================================
+
 
 python3 -m venv venv source venv/bin/activate # Linux/macOS
 
 .\venv\Scripts\activate # Windows
-=================================
+
 
 Install Python dependencies
-===========================
+
 
 pip install --upgrade pip pip install -r requirements.txt
 
 Authenticate with Hugging Face CLI (if not done already)
-========================================================
+
 
 huggingface-cli login # Paste your token when prompted
 
 Index Jungian concepts into Pinecone (ONLY THE FIRST TIME or if concepts change)
-================================================================================
+
 
 Make sure to review/modify metadata in populate_pinecone.py first
-=================================================================
+
 
 python populate_pinecone.py
 
 Start the Flask server (can take a LONG time the first time while downloading the LLM)
-======================================================================================
+
 
 python llama_service.py
 
@@ -177,17 +177,17 @@ python llama_service.py
 *Open a **new terminal**.*
 
 Navigate to the backend directory
-=================================
+
 
 cd ../backend # Or the full path from the root
 
 Install Node.js dependencies
-============================
+
 
 npm install
 
 Start the Node.js development server
-====================================
+
 
 npm run dev
 
@@ -198,17 +198,15 @@ npm run dev
 *Open a **third terminal**.*
 
 Navigate to the project root directory
-======================================
 
 cd .. # Or the full path from the root
 
 Install frontend dependencies
-=============================
 
 npm install
 
 Start the Vite development server
-=================================
+
 
 npm run dev
 
