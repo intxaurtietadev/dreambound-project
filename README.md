@@ -1,7 +1,7 @@
-Dreamscape - Dream Journal & AI Archetype Explorer
+Dreambound - Dream Journal & AI Archetype Explorer
 ==================================================
 
-Dreamscape is a web application designed to explore the world of dreams through a personal journal and analyses based on Jungian psychology. It allows users to record their dreams, receive AI-generated interpretations considering relevant archetypes, and better understand the patterns of their unconscious mind.
+Dreambound is a web application designed to explore the world of dreams through a personal journal and analyses based on Jungian psychology. It allows users to record their dreams, receive AI-generated interpretations considering relevant archetypes, and better understand the patterns of their unconscious mind.
 
 ✨ Features
 ----------
