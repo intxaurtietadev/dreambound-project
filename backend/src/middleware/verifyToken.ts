@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { ObjectId } from 'mongodb';
 
-const SECRET = process.env.JWT_SECRET_KEY || "tu_clave_super_secreta";
+const SECRET = process.env.JWT_SECRET || "tu_clave_super_secreta";
 
 export interface AuthRequest<P = {}, ResBody = any, ReqBody = any, ReqQuery = any> 
   extends Request<P, ResBody, ReqBody, ReqQuery> {
